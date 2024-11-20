@@ -7,7 +7,7 @@ local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smar
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
--- For example, changing the color scheme:
+---
 config.color_scheme = "Catppuccin Mocha"
 
 config.font = wezterm.font({ family = "Operator Mono", harfbuzz_features = { "liga=0" } })
