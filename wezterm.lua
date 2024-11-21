@@ -66,7 +66,7 @@ local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
 resurrect.change_state_save_dir("/Users/chris/.local/state/wezterm/resurrect/")
 
 resurrect.periodic_save({
-	interval_seconds = 30,
+	interval_seconds = 120,
 	save_workspace = true,
 	save_window = true,
 	save_tabs = true,
@@ -100,25 +100,6 @@ end
 
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
 
--- custom workspace formatter
-workspace_switcher.workspace_formatter = function(label)
-	return wezterm.format({
-		{ Foreground = { AnsiColor = "Green" } },
-		{ Background = { Color = scheme.tab_bar.background } },
-		{ Attribute = { Italic = false } },
-		{ Text = "󱂬: " },
-		{ Attribute = { Italic = true } },
-		{ Foreground = { Color = scheme.foreground } },
-		{ Text = label },
-	})
-end
-
-wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
-	local gui_win = window:gui_window()
-	local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-	gui_win:set_right_status(workspace_switcher.workspace_formatter(base_path))
-end)
-
 -- Load the state whenever I create a new workspace
 wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, path, label)
 	local workspace_state = resurrect.workspace_state
@@ -129,11 +110,6 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(windo
 		restore_text = true,
 		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
 	})
-
-	-- update right status bar
-	local gui_win = window:gui_window()
-	local base_path = string.gsub(label, "(.*[/\\])(.*)", "%2")
-	gui_win:set_right_status(workspace_switcher.workspace_formatter(base_path))
 end)
 
 -- Saves the state whenever I select a workspace
@@ -258,24 +234,24 @@ tabline.setup({
 			{ Attribute = { Intensity = "Bold" } },
 			" ",
 			function(tab)
-				local cwd
-				local cwd_uri = tab.active_pane.current_working_dir
-				if cwd_uri then
-					local file_path = cwd_uri.file_path
-					cwd = file_path:gsub(HOME, "~")
+				local result = ""
+				local cwd = tab.active_pane.current_working_dir
+				if cwd then
+					cwd = cwd.file_path:gsub(HOME, "~")
 					if #cwd > TABSIZE then
 						local inc = ""
 						local output = ""
 						while #(inc .. "/" .. output) <= TABSIZE + 1 do -- we'll remove the trailing slash
-							output = inc .. "/" .. output
-							inc = cwd:match("([^/]+)/?$")
-							cwd = cwd:sub(1, #cwd - #inc - 1)
+							output = inc .. "/" .. output -- prefix the output with the parent name.
+							inc = cwd:match("([^/]+)/?$") -- get the next parent
+							cwd = cwd:sub(1, #cwd - #inc - 1) -- remove it from cwd
 						end
-						return output:sub(1, #output - 1)
+						result = output:sub(1, #output - 1) -- truncation of the trailing slash
 					else
-						return cwd
+						result = cwd
 					end
 				end
+				return result
 			end,
 			" ",
 			{ "zoomed", padding = 0 },
@@ -335,7 +311,7 @@ tabline.setup({
 					["zsh"] = wezterm.nerdfonts.dev_terminal,
 					-- and more...
 				},
-				padding = { left = 0, right = 2 },
+				padding = { left = 0, right = 1 },
 			},
 			{ Foreground = { Color = tabline_scheme.tab.inactive.bg } },
 			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
@@ -451,6 +427,25 @@ config.keys = {
 		-- action = workspace_switcher.switch_workspace(),
 	},
 	{ mods = "LEADER|SHIFT", key = "S", action = workspace_switcher.switch_to_prev_workspace() },
+	{ -- Prompt for a name to use for anew workspace and switch to it.
+		mods = "LEADER|SHIFT",
+		key = "C",
+		action = wezterm.action.PromptInputLine({
+			description = wezterm.format({
+				{ Attribute = { Intensity = "Bold" } },
+				{ Foreground = { Color = scheme.ansi[5] } },
+				{ Text = "Enter name for the new workspace" },
+			}),
+			action = wezterm.action_callback(function(window, pane, line)
+				-- line will be `nil` if they hit escape without entering anything
+				-- An empty string if they just hit enter
+				-- Or the actual line of text they wrote
+				if line and #string.gsub(line, "^%s*(.-)%s*$", "%1") ~= 0 then
+					window:perform_action(wezterm.action.SwitchToWorkspace({ name = line }), pane)
+				end
+			end),
+		}),
+	},
 	{
 		mods = "LEADER",
 		key = "w",
@@ -469,6 +464,7 @@ config.keys = {
 		end),
 	},
 	{
+		-- Read the resurrect state file
 		mods = "LEADER|SHIFT",
 		key = "R",
 		action = wezterm.action_callback(function(win, pane)
