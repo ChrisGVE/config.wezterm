@@ -9,6 +9,8 @@ local wezterm = require("wezterm")
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
 local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
 -- Update the plugins
 wezterm.plugin.update_all()
 
@@ -32,10 +34,10 @@ config.set_environment_variables = {
 -- CONSTANTS
 ------------
 
-local HARD_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
+local HARD_LEFT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
 local SOFT_LEFT_ARROW = wezterm.nerdfonts.pl_right_soft_divider
-local HARD_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
-local SOFT_RIGHT_ARROW = wezterm.nerdfonts.pl_left_soft_divider
+local HARD_RIGHT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
+local SOFT_RIGHT_ARROW = wezterm.nerdfonts.pl_right_soft_divider
 
 local LOWER_LEFT_WEDGE = wezterm.nerdfonts.ple_lower_left_triangle
 local UPPER_LEFT_WEDGE = wezterm.nerdfonts.ple_upper_left_triangle
@@ -44,6 +46,10 @@ local UPPER_RIGHT_WEDGE = wezterm.nerdfonts.ple_upper_right_triangle
 
 local BACKSLASH_SEPARATOR = wezterm.nerdfonts.ple_backslash_separator
 local FORWARDSLASH_SEPARATOR = wezterm.nerdfonts.ple_forwardslash_separator
+
+local HOME = os.getenv("HOME")
+
+local TABSIZE = 20
 
 -- Selecting the color scheme
 config.color_scheme = "Catppuccin Mocha"
@@ -57,6 +63,8 @@ local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
 -- Various utilities settings
 
 -- RESURRECT
+resurrect.change_state_save_dir("/Users/chris/.local/state/wezterm/resurrect/")
+
 resurrect.periodic_save({
 	interval_seconds = 30,
 	save_workspace = true,
@@ -167,106 +175,219 @@ end)
 -- Configuration of the tab bar
 --
 -- Utility constants
+config.tab_max_width = 30
 
--- configuration of the tab bar itself
-local function tab_title(tab)
-	local title = tab.tab_title
-	if title and #title > 0 then
-		return title
+local TICKS = 0
+local __HAS_UNSEEN_OUTPUT = false
+
+local function has_unseen_output(tab)
+	if os.clock() - TICKS < 0.5 then
+		return __HAS_UNSEEN_OUTPUT
 	end
-
-	return tab.active_pane.title
-end
-
-wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
-	local has_unseen_output = false
+	TICKS = os.clock()
+	local result = false
 	for _, pane in ipairs(tab.panes) do
 		if pane.has_unseen_output then
-			has_unseen_output = true
+			result = true
 			break
 		end
 	end
+	__HAS_UNSEEN_OUTPUT = result
+	return result
+end
 
-	local id = { Text = tostring(tab.tab_index + 1) }
-	local title = { Text = " " .. tab_title(tab) .. " " }
+-- configuration of the tabline plugin
+--
 
-	local c_1
-	local c_2
-	local c_3
-	local c_4
-	local attr1
-	local attr2
+tabline.setup({
+	options = {
+		theme = config.color_scheme,
+	},
+})
 
-	if tab.is_active then
-		c_1 = scheme.selection_fg
-		c_2 = scheme.tab_bar.active_tab.fg_color
-		c_3 = scheme.tab_bar.active_tab.fg_color
-		c_4 = scheme.tab_bar.active_tab.bg_color
-		attr1 = { Attribute = { Intensity = "Bold" } }
-		attr2 = { Attribute = { Italic = false } }
-	else
-		attr1 = { Attribute = { Intensity = "Normal" } }
-		attr2 = { Attribute = { Italic = true } }
-		if hover then
-			c_1 = scheme.selection_bg
-			c_2 = scheme.tab_bar.inactive_tab.fg_color
-			c_3 = scheme.foreground
-			c_4 = scheme.tab_bar.inactive_tab.bg_color
-		else
-			c_1 = scheme.selection_bg
-			c_2 = scheme.tab_bar.inactive_tab_hover.fg_color
-			c_3 = scheme.foreground
-			c_4 = scheme.tab_bar.inactive_tab_hover.bg_color
-		end
-		if has_unseen_output then
-			c_2 = scheme.ansi[2]
-		end
-	end
-	return {
-		"ResetAttributes",
-		{ Foreground = { Color = scheme.tab_bar.background } },
-		{ Background = { Color = c_1 } },
-		{ Text = UPPER_LEFT_WEDGE },
-		{ Foreground = { Color = c_2 } },
-		{ Background = { Color = c_1 } },
-		attr1,
-		attr2,
-		id,
-		{ Foreground = { Color = c_1 } },
-		{ Background = { Color = c_4 } },
-		{ Text = UPPER_LEFT_WEDGE },
-		{ Foreground = { Color = c_3 } },
-		{ Background = { Color = c_4 } },
-		attr1,
-		attr2,
-		title,
-		{ Foreground = { Color = c_4 } },
-		{ Background = { Color = scheme.tab_bar.background } },
-		{ Text = UPPER_LEFT_WEDGE },
-	}
-end)
+local tabline_scheme = tabline.get_colors()
 
--- scheme.tab_bar.active_tab.intensity = "Bold"
--- scheme.tab_bar.inactive_tab.italic = true
--- scheme.tab_bar.inactive_tab_hover.italic = true
--- config.colors = scheme
+tabline.setup({
+	options = {
+		color_overrides = {
+			tab = {
+				inactive = {
+					fg = scheme.tab_bar.inactive_tab.fg_color,
+					bg = scheme.tab_bar.inactive_tab.bg_color,
+				},
+				inactive_hover = {
+					fg = scheme.tab_bar.inactive_tab_hover.fg_color,
+					bg = scheme.tab_bar.inactive_tab_hover.bg_color,
+				},
+			},
+		},
+		section_separators = {
+			left = HARD_LEFT_ARROW,
+			right = HARD_RIGHT_ARROW,
+		},
+		component_separators = {
+			left = SOFT_LEFT_ARROW,
+			right = SOFT_RIGHT_ARROW,
+		},
+		tab_separators = {
+			left = "",
+			right = "",
+			-- left = UPPER_LEFT_WEDGE,
+			-- right = LOWER_RIGHT_WEDGE,
+		},
+	},
+	sections = {
+		tabline_a = { {
+			"mode",
+			fmt = function(str)
+				return str:sub(1, 1)
+			end,
+		} },
+		tabline_b = { "workspace" },
+		tabline_c = { " " },
+		tab_active = {
+			{ Attribute = { Intensity = "Bold" } },
+			{ Foreground = { Color = scheme.tab_bar.active_tab.fg_color } },
+			{ Background = { Color = scheme.selection_fg } },
+			UPPER_LEFT_WEDGE,
+			"index",
+			{ Foreground = { Color = scheme.selection_fg } },
+			{ Background = { Color = tabline_scheme.tab.active.bg } },
+			UPPER_LEFT_WEDGE,
+			"ResetAttributes",
+			{ Attribute = { Intensity = "Bold" } },
+			" ",
+			function(tab)
+				local cwd
+				local cwd_uri = tab.active_pane.current_working_dir
+				if cwd_uri then
+					local file_path = cwd_uri.file_path
+					cwd = file_path:gsub(HOME, "~")
+					if #cwd > TABSIZE then
+						local inc = ""
+						local output = ""
+						while #(inc .. "/" .. output) <= TABSIZE + 1 do -- we'll remove the trailing slash
+							output = inc .. "/" .. output
+							inc = cwd:match("([^/]+)/?$")
+							cwd = cwd:sub(1, #cwd - #inc - 1)
+						end
+						return output:sub(1, #output - 1)
+					else
+						return cwd
+					end
+				end
+			end,
+			" ",
+			{ "zoomed", padding = 0 },
+			" ",
+			{ Foreground = { Color = tabline_scheme.tab.active.bg } },
+			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
+			UPPER_LEFT_WEDGE,
+			" ",
+		},
+		tab_inactive = {
+			{ Attribute = { Italic = true } },
+			{ Foreground = { Color = scheme.selection_bg } },
+			{ Background = { Color = scheme.tab_bar.active_tab.fg_color } },
+			LOWER_RIGHT_WEDGE,
+			-- {
+			-- 	Foreground = {
+			-- 		Color = function(tab)
+			-- 			if has_unseen_output(tab) then
+			-- 				return scheme.ansi[2]
+			-- 			else
+			-- 				return scheme.tab_bar.inactive_tab.fg_color
+			-- 			end
+			-- 		end,
+			-- 	},
+			-- },
+			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
+			{ Background = { Color = scheme.selection_bg } },
+			"index",
+			{ Foreground = { Color = scheme.selection_bg } },
+			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
+			UPPER_LEFT_WEDGE,
+			"ResetAttributes",
+			{ Attribute = { Italic = true } },
+			{
+				"process",
+				process_to_icon = {
+					["apt"] = wezterm.nerdfonts.dev_debian,
+					["bash"] = wezterm.nerdfonts.cod_terminal_bash,
+					["bat"] = wezterm.nerdfonts.md_bat,
+					["cmd.exe"] = wezterm.nerdfonts.md_console_line,
+					["curl"] = wezterm.nerdfonts.md_flattr,
+					["debug"] = wezterm.nerdfonts.cod_debug,
+					["default"] = wezterm.nerdfonts.md_application,
+					["docker"] = wezterm.nerdfonts.linux_docker,
+					["docker-compose"] = wezterm.nerdfonts.linux_docker,
+					["git"] = wezterm.nerdfonts.dev_git,
+					["go"] = wezterm.nerdfonts.md_language_go,
+					["lazydocker"] = wezterm.nerdfonts.linux_docker,
+					["lazygit"] = wezterm.nerdfonts.cod_github,
+					["lua"] = wezterm.nerdfonts.seti_lua,
+					["make"] = wezterm.nerdfonts.seti_makefile,
+					["nix"] = wezterm.nerdfonts.linux_nixos,
+					["node"] = wezterm.nerdfonts.md_nodejs,
+					["npm"] = wezterm.nerdfonts.md_npm,
+					["nvim"] = wezterm.nerdfonts.custom_neovim,
+					["psql"] = wezterm.nerdfonts.dev_postgresql,
+					["zsh"] = wezterm.nerdfonts.dev_terminal,
+					-- and more...
+				},
+				padding = { left = 0, right = 2 },
+			},
+			{ Foreground = { Color = tabline_scheme.tab.inactive.bg } },
+			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
+			UPPER_LEFT_WEDGE,
+			" ",
+		},
+		tabline_x = { "ram", "cpu" },
+		tabline_y = {
+			{
+				"datetime",
+				style = "%a, %d-%b-%y %H:%M",
+				hour_to_icon = {
+					["00"] = wezterm.nerdfonts.md_clock_time_twelve_outline,
+					["01"] = wezterm.nerdfonts.md_clock_time_one_outline,
+					["02"] = wezterm.nerdfonts.md_clock_time_two_outline,
+					["03"] = wezterm.nerdfonts.md_clock_time_three_outline,
+					["04"] = wezterm.nerdfonts.md_clock_time_four_outline,
+					["05"] = wezterm.nerdfonts.md_clock_time_five_outline,
+					["06"] = wezterm.nerdfonts.md_clock_time_six_outline,
+					["07"] = wezterm.nerdfonts.md_clock_time_seven_outline,
+					["08"] = wezterm.nerdfonts.md_clock_time_eight_outline,
+					["09"] = wezterm.nerdfonts.md_clock_time_nine_outline,
+					["10"] = wezterm.nerdfonts.md_clock_time_ten_outline,
+					["11"] = wezterm.nerdfonts.md_clock_time_eleven_outline,
+					["12"] = wezterm.nerdfonts.md_clock_time_twelve,
+					["13"] = wezterm.nerdfonts.md_clock_time_one,
+					["14"] = wezterm.nerdfonts.md_clock_time_two,
+					["15"] = wezterm.nerdfonts.md_clock_time_three,
+					["16"] = wezterm.nerdfonts.md_clock_time_four,
+					["17"] = wezterm.nerdfonts.md_clock_time_five,
+					["18"] = wezterm.nerdfonts.md_clock_time_six,
+					["19"] = wezterm.nerdfonts.md_clock_time_seven,
+					["20"] = wezterm.nerdfonts.md_clock_time_eight,
+					["21"] = wezterm.nerdfonts.md_clock_time_nine,
+					["22"] = wezterm.nerdfonts.md_clock_time_ten,
+					["23"] = wezterm.nerdfonts.md_clock_time_eleven,
+				},
+			},
+		},
+		tabline_z = { "hostname" },
+	},
+	extensions = { "resurrect", "smart_workspace_switcher" },
+})
 
-config.use_fancy_tab_bar = false
-config.enable_tab_bar = true
+tabline.apply_to_config(config)
 config.tab_bar_at_bottom = true
-config.show_tabs_in_tab_bar = true
-config.show_new_tab_button_in_tab_bar = false
 
--- wezterm.on("update-status", function(window, pane)
--- 	window:set_left_status("left")
--- 	window:set_right_status("right")
--- end)
-
--- config.font = wezterm.font({ family = "Operator Mono Lig", harfbuzz_features = { "liga=1", "calt=1", "clig=1" } })
+-- Fonts configuration
 config.font = wezterm.font_with_fallback({
 	{ family = "Operator Mono SSm Lig", harfbuzz_features = { "liga=1", "calt=1", "clig=1" } },
 	{ family = "Operator Mono Lig", harfbuzz_features = { "liga=1", "calt=1", "clig=1" } },
-	{ family = "Symbols Nerd Font", scale = 1. },
+	{ family = "Symbols Nerd Font" },
 })
 
 config.use_cap_height_to_scale_fallback_fonts = true
@@ -286,7 +407,7 @@ config.leader = { key = "s", mods = "CTRL", timeout_milliseconds = 1500 }
 -- Key configuration
 config.keys = {
 	{ mods = "CMD", key = "q", action = wezterm.action.QuitApplication },
-	{ mods = "CMD", key = "w", action = wezterm.action.CloseCurrentTab({ confirm = false }) },
+	{ mods = "CMD", key = "w", action = wezterm.action.CloseCurrentTab({ confirm = true }) },
 	{ mods = "CMD", key = "n", action = wezterm.action.SpawnWindow },
 	{ mods = "CMD", key = "t", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
 	{ mods = "CMD", key = "c", action = wezterm.action.CopyTo("Clipboard") },
