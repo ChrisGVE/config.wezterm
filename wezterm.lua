@@ -50,11 +50,36 @@ local FORWARDSLASH_SEPARATOR = wezterm.nerdfonts.ple_forwardslash_separator
 local HOME = os.getenv("HOME")
 
 local TABSIZE = 20
+local TAB_UPDATE_INTERVAL = 5000 -- every 5 seconds
 
 -- Selecting the color scheme
 config.color_scheme = "Catppuccin Mocha"
 local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
 -- print(scheme)
+
+-------------------
+-- HELPER FUNCTIONS
+-------------------
+
+local function truncate_path(path, max_chars)
+	-- Reverse the path for easier processing from the lowest folder level
+	local reversed_path = path:reverse()
+
+	-- Match up to max_chars without splitting folder names (stopping at '/')
+	local matched_length = 0
+	local truncated_reversed = ""
+
+	for segment in reversed_path:gmatch("[^/]+/") do
+		if matched_length + #segment > max_chars then
+			break
+		end
+		truncated_reversed = truncated_reversed .. segment
+		matched_length = matched_length + #segment
+	end
+
+	-- Reverse back to get the truncated path in original order
+	return truncated_reversed:reverse()
+end
 
 ---------------------
 -- FEATURE MANAGEMENT
@@ -73,28 +98,28 @@ resurrect.periodic_save({
 })
 
 -- Sending a notification when specified events occur but suppress on `periodic_save()`:
-local resurrect_event_listeners = {
-	"resurrect.error",
-	"resurrect.save_state.finished",
-}
-local is_periodic_save = false
-wezterm.on("resurrect.periodic_save", function()
-	is_periodic_save = true
-end)
-for _, event in ipairs(resurrect_event_listeners) do
-	wezterm.on(event, function(...)
-		if event == "resurrect.save_state.finished" and is_periodic_save then
-			is_periodic_save = false
-			return
-		end
-		local args = { ... }
-		local msg = event
-		for _, v in ipairs(args) do
-			msg = msg .. " " .. tostring(v)
-		end
-		wezterm.gui.gui_windows()[1]:toast_notification("Wezterm - resurrect", msg, nil, 4000)
-	end)
-end
+-- local resurrect_event_listeners = {
+-- 	"resurrect.error",
+-- 	"resurrect.save_state.finished",
+-- }
+-- local is_periodic_save = false
+-- wezterm.on("resurrect.periodic_save", function()
+-- 	is_periodic_save = true
+-- end)
+-- for _, event in ipairs(resurrect_event_listeners) do
+-- 	wezterm.on(event, function(...)
+-- 		if event == "resurrect.save_state.finished" and is_periodic_save then
+-- 			is_periodic_save = false
+-- 			return
+-- 		end
+-- 		local args = { ... }
+-- 		local msg = event
+-- 		for _, v in ipairs(args) do
+-- 			msg = msg .. " " .. tostring(v)
+-- 		end
+-- 		wezterm.gui.gui_windows()[1]:toast_notification("Wezterm - resurrect", msg, nil, 4000)
+-- 	end)
+-- end
 
 -- SMART WORKSPACE
 
@@ -120,29 +145,29 @@ end)
 
 -- AUGMENT COMMAND PALETTE
 
-wezterm.on("augment-command-palette", function(window, pane)
-	local workspace_state = resurrect.workspace_state
-	return {
-		{
-			brief = "Window | Workspace: Switch Workspace",
-			icon = "md_briefcase_arrow_up_down",
-			action = workspace_switcher.switch_workspace(),
-		},
-		{
-			brief = "Window | Workspace: Rename Workspace",
-			icon = "md_briefcase_edit",
-			action = wezterm.action.PromptInputLine({
-				description = "Enter new name for workspace",
-				action = wezterm.action_callback(function(window, pane, line)
-					if line then
-						wezterm.mux.rename_workspace(wezterm.mux.get_active_workspace(), line)
-						resurrect.save_state(workspace_state.get_workspace_state())
-					end
-				end),
-			}),
-		},
-	}
-end)
+-- wezterm.on("augment-command-palette", function(window, pane)
+-- 	local workspace_state = resurrect.workspace_state
+-- 	return {
+-- 		{
+-- 			brief = "Window | Workspace: Switch Workspace",
+-- 			icon = "md_briefcase_arrow_up_down",
+-- 			action = workspace_switcher.switch_workspace(),
+-- 		},
+-- 		{
+-- 			brief = "Window | Workspace: Rename Workspace",
+-- 			icon = "md_briefcase_edit",
+-- 			action = wezterm.action.PromptInputLine({
+-- 				description = "Enter new name for workspace",
+-- 				action = wezterm.action_callback(function(window, pane, line)
+-- 					if line then
+-- 						wezterm.mux.rename_workspace(wezterm.mux.get_active_workspace(), line)
+-- 						resurrect.save_state(workspace_state.get_workspace_state())
+-- 					end
+-- 				end),
+-- 			}),
+-- 		},
+-- 	}
+-- end)
 
 ----------------
 -- UI APPEARANCE
@@ -239,14 +264,7 @@ tabline.setup({
 				if cwd then
 					cwd = cwd.file_path:gsub(HOME, "~")
 					if #cwd > TABSIZE then
-						local inc = ""
-						local output = ""
-						while #(inc .. "/" .. output) <= TABSIZE + 1 do -- we'll remove the trailing slash
-							output = inc .. "/" .. output -- prefix the output with the parent name.
-							inc = cwd:match("([^/]+)/?$") -- get the next parent
-							cwd = cwd:sub(1, #cwd - #inc - 1) -- remove it from cwd
-						end
-						result = output:sub(1, #output - 1) -- truncation of the trailing slash
+						result = wezterm.nerdfonts.cod_ellipsis .. truncate_path(cwd, TABSIZE)
 					else
 						result = cwd
 					end
@@ -318,7 +336,7 @@ tabline.setup({
 			UPPER_LEFT_WEDGE,
 			" ",
 		},
-		tabline_x = { "ram", "cpu" },
+		tabline_x = { "ram", { "cpu", throttle = 3 } },
 		tabline_y = {
 			{
 				"datetime",
@@ -358,6 +376,7 @@ tabline.setup({
 
 tabline.apply_to_config(config)
 config.tab_bar_at_bottom = true
+config.status_update_interval = TAB_UPDATE_INTERVAL
 
 -- Fonts configuration
 config.font = wezterm.font_with_fallback({
