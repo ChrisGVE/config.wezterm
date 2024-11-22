@@ -3,7 +3,7 @@
 ---------
 --
 -- Pull in the wezterm API
-local wezterm = require("wezterm")
+local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
 
 -- Install plugins
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
@@ -29,6 +29,9 @@ config.window_close_confirmation = "NeverPrompt"
 config.set_environment_variables = {
 	PATH = os.getenv("PATH") .. ":/usr/local/bin",
 }
+
+-- Enable kitty's image protocol
+config.enable_kitty_graphics = true
 
 ------------
 -- CONSTANTS
@@ -174,9 +177,6 @@ end)
 ----------------
 
 -- Configuration of the tab bar
---
--- Utility constants
-config.tab_max_width = 30
 
 local TICKS = 0
 local __HAS_UNSEEN_OUTPUT = false
@@ -388,6 +388,9 @@ config.font = wezterm.font_with_fallback({
 config.use_cap_height_to_scale_fallback_fonts = true
 
 config.font_size = 15
+
+-- Title bar
+config.window_decorations = "RESIZE|TITLE"
 
 ---------------
 -- KEY BINDINGS
