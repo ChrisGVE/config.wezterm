@@ -37,33 +37,118 @@ config.enable_kitty_graphics = true
 -- CONSTANTS
 ------------
 
-local HARD_LEFT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
-local SOFT_LEFT_ARROW = wezterm.nerdfonts.pl_right_soft_divider
-local HARD_RIGHT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
-local SOFT_RIGHT_ARROW = wezterm.nerdfonts.pl_right_soft_divider
+local nerdfonts = wezterm.nerdfonts
 
-local LOWER_LEFT_WEDGE = wezterm.nerdfonts.ple_lower_left_triangle
-local UPPER_LEFT_WEDGE = wezterm.nerdfonts.ple_upper_left_triangle
-local LOWER_RIGHT_WEDGE = wezterm.nerdfonts.ple_lower_right_triangle
-local UPPER_RIGHT_WEDGE = wezterm.nerdfonts.ple_upper_right_triangle
+local HARD_LEFT_ARROW = nerdfonts.pl_left_hard_divider
+local SOFT_LEFT_ARROW = nerdfonts.pl_right_soft_divider
+local HARD_RIGHT_ARROW = nerdfonts.pl_right_hard_divider
+local SOFT_RIGHT_ARROW = nerdfonts.pl_right_soft_divider
 
-local BACKSLASH_SEPARATOR = wezterm.nerdfonts.ple_backslash_separator
-local FORWARDSLASH_SEPARATOR = wezterm.nerdfonts.ple_forwardslash_separator
+local LOWER_LEFT_WEDGE = nerdfonts.ple_lower_left_triangle
+local UPPER_LEFT_WEDGE = nerdfonts.ple_upper_left_triangle
+local LOWER_RIGHT_WEDGE = nerdfonts.ple_lower_right_triangle
+local UPPER_RIGHT_WEDGE = nerdfonts.ple_upper_right_triangle
+
+local BACKSLASH_SEPARATOR = nerdfonts.ple_backslash_separator
+local FORWARDSLASH_SEPARATOR = nerdfonts.ple_forwardslash_separator
 
 local HOME = os.getenv("HOME")
 
 local TABSIZE = 20
-local TAB_UPDATE_INTERVAL = 5000 -- every 5 seconds
+local TAB_UPDATE_INTERVAL = 500 -- ms
 
 -- Selecting the color scheme
 config.color_scheme = "Catppuccin Mocha"
 local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
--- print(scheme)
+
+local process_default_icons = {
+	["air"] = nerdfonts.md_language_go,
+	["apt"] = nerdfonts.dev_debian,
+	["bacon"] = nerdfonts.dev_rust,
+	["bash"] = nerdfonts.cod_terminal_bash,
+	["bat"] = nerdfonts.md_bat,
+	["btm"] = nerdfonts.md_chart_donut_variant,
+	["btop"] = nerdfonts.md_chart_areaspline,
+	["btop4win++"] = nerdfonts.md_chart_areaspline,
+	["bun"] = nerdfonts.md_hamburger,
+	["cargo"] = nerdfonts.dev_rust,
+	["chezmoi"] = nerdfonts.md_home_plus_outline,
+	["cmd.exe"] = nerdfonts.md_console_line,
+	["curl"] = nerdfonts.md_flattr,
+	["debug"] = nerdfonts.cod_debug,
+	["default"] = nerdfonts.md_application,
+	["docker"] = nerdfonts.linux_docker,
+	["docker-compose"] = nerdfonts.linux_docker,
+	["dpkg"] = nerdfonts.dev_debian,
+	["fish"] = nerdfonts.md_fish,
+	["gh"] = nerdfonts.dev_github_badge,
+	["git"] = nerdfonts.dev_git,
+	["go"] = nerdfonts.md_language_go,
+	["htop"] = nerdfonts.md_chart_areaspline,
+	["kubectl"] = nerdfonts.linux_docker,
+	["kuberlr"] = nerdfonts.linux_docker,
+	["lazydocker"] = nerdfonts.linux_docker,
+	["lazygit"] = nerdfonts.cod_github,
+	["lua"] = nerdfonts.seti_lua,
+	["make"] = nerdfonts.seti_makefile,
+	["nix"] = nerdfonts.linux_nixos,
+	["node"] = nerdfonts.md_nodejs,
+	["npm"] = nerdfonts.md_npm,
+	["nvim"] = nerdfonts.custom_neovim,
+	["pacman"] = nerdfonts.md_pac_man,
+	["paru"] = nerdfonts.md_pac_man,
+	["pnpm"] = nerdfonts.md_npm,
+	["postgresql"] = nerdfonts.dev_postgresql,
+	["powershell.exe"] = nerdfonts.md_console,
+	["psql"] = nerdfonts.dev_postgresql,
+	["pwsh.exe"] = nerdfonts.md_console,
+	["rpm"] = nerdfonts.dev_redhat,
+	["redis"] = nerdfonts.dev_redis,
+	["ruby"] = nerdfonts.cod_ruby,
+	["rust"] = nerdfonts.dev_rust,
+	["serial"] = nerdfonts.md_serial_port,
+	["ssh"] = nerdfonts.md_pipe,
+	["sudo"] = nerdfonts.fa_hashtag,
+	["tls"] = nerdfonts.md_power_socket,
+	["topgrade"] = nerdfonts.md_rocket_launch,
+	["unix"] = nerdfonts.md_bash,
+	["valkey"] = nerdfonts.dev_redis,
+	["vim"] = nerdfonts.dev_vim,
+	["yarn"] = nerdfonts.seti_yarn,
+	["yay"] = nerdfonts.md_pac_man,
+	["yazi"] = nerdfonts.md_duck,
+	["yum"] = nerdfonts.dev_redhat,
+	["zsh"] = nerdfonts.dev_terminal,
+}
+
+local process_custom_icons = {
+	-- ["brew"] = nerdfonts.dev_homebrew,
+	["brew"] = " ",
+	["taskwarrier-tui"] = nerdfonts.fa_tasks,
+	["wget"] = nerdfonts.md_arrow_down_box,
+	["curl"] = nerdfonts.md_arrow_down_box,
+	["gitui"] = nerdfonts.dev_github_badge,
+	["kubectl"] = nerdfonts.md_kubernetes,
+	["kuberlr"] = nerdfonts.md_kubernetes,
+	["ssh"] = nerdfonts.md_ssh,
+}
 
 -------------------
 -- HELPER FUNCTIONS
 -------------------
 
+-- Build the full table of icons
+local process_icons = {}
+
+for k, v in pairs(process_default_icons) do
+	process_icons[k] = v
+end
+
+for k, v in pairs(process_custom_icons) do
+	process_icons[k] = v
+end
+
+-- truncate path
 local function truncate_path(path, max_chars)
 	-- Reverse the path for easier processing from the lowest folder level
 	local reversed_path = path:reverse()
@@ -82,6 +167,74 @@ local function truncate_path(path, max_chars)
 
 	-- Reverse back to get the truncated path in original order
 	return truncated_reversed:reverse()
+end
+
+-- function returns the current working directory for the tab
+local function get_cwd(tab)
+	local result = ""
+	local cwd = tab.active_pane.current_working_dir
+	if cwd then
+		cwd = cwd.file_path:gsub(HOME, "~")
+		if #cwd > TABSIZE then
+			result = nerdfonts.cod_ellipsis .. truncate_path(cwd, TABSIZE)
+		else
+			result = cwd
+		end
+	end
+	return result
+end
+
+-- get the name of the process running in the foreground for the tab
+local function get_process_name(tab)
+	local foreground_process_name = ""
+	-- get the foreground process name if available
+	if tab.active_pane and tab.active_pane.foreground_process_name then
+		foreground_process_name = tab.active_pane.foreground_process_name
+		foreground_process_name = foreground_process_name:match("([^/\\]+)[/\\]?$") or foreground_process_name
+	end
+
+	-- fallback to the title if the foreground process name is unavailable
+	-- Wezterm uses OSC 1/2 escape sequences to guess the process name and set the title
+	-- see https://wezfurlong.org/wezterm/config/lua/pane/get_title.html
+	-- title defaults to 'wezterm' if another name is unavailable
+	if foreground_process_name == "" then
+		foreground_process_name = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
+	end
+
+	-- if the tab active pane contains a non-local domain, use the domain name
+	if foreground_process_name == "wezterm" then
+		foreground_process_name = tab.active_pane.domain_name ~= "local" and tab.active_pane.domain_name or "wezterm"
+	end
+
+	return foreground_process_name
+end
+
+-- function returns the process icon for the process name
+local function get_process_icon(process_name)
+	local icon = ""
+	for process, icn in pairs(process_icons) do
+		if process_name:lower():match("^" .. process) then
+			icon = icn
+			break
+		end
+	end
+
+	if icon == "" then
+		icon = process_icons["default"]
+	end
+
+	return icon .. " "
+end
+
+-- function returns the current working directory by path only if the process is a shell
+local function get_cwd_postfix(tab)
+	local postfix = ""
+	local process = get_process_name(tab)
+	if string.find("|bash|zsh|fish|tmux|fish|ksh|csh|", process) then
+		postfix = "(" .. get_cwd(tab) .. ")"
+	end
+
+	return postfix
 end
 
 ---------------------
@@ -159,7 +312,7 @@ end)
 -- 		{
 -- 			brief = "Window | Workspace: Rename Workspace",
 -- 			icon = "md_briefcase_edit",
--- 			action = wezterm.action.PromptInputLine({
+--			action = wezterm.action.PromptInputLine({
 -- 				description = "Enter new name for workspace",
 -- 				action = wezterm.action_callback(function(window, pane, line)
 -- 					if line then
@@ -173,60 +326,40 @@ end)
 -- end)
 
 ----------------
--- UI APPEARANCE
+-- FONTS
 ----------------
 
--- Fonts configuration
 config.font = wezterm.font_with_fallback({
 	{
-		family = "Operator Mono Lig",
+		family = "Operator Mono SSm Lig",
 		weight = "Light",
 		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
 		assume_emoji_presentation = false,
 	},
-	{
-		family = "Operator Mono SSm Lig",
-		weight = "Book",
-		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
-		assume_emoji_presentation = false,
-	},
-	{
-		family = "Operator Mono SSm Lig",
-		weight = "Medium",
-		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
-		assume_emoji_presentation = false,
-	},
-	{ family = "Hack Nerd Font Mono" },
 	{ family = "Symbols Nerd Font Mono" },
+	{ family = "Hack Nerd Font Mono" },
 })
 
 config.use_cap_height_to_scale_fallback_fonts = true
 
-config.font_size = 15
+config.font_size = 16
 
--- Configuration of the tab bar
+----------------
+-- TAB BAR
+----------------
 
-local TICKS = 0
-local __HAS_UNSEEN_OUTPUT = false
-
-local function has_unseen_output(tab)
-	if os.clock() - TICKS < 0.5 then
-		return __HAS_UNSEEN_OUTPUT
-	end
-	TICKS = os.clock()
+local function has_unseen_output(tab_id)
 	local result = false
-	for _, pane in ipairs(tab.panes) do
+	for _, pane in ipairs(tab.activate_pane) do
 		if pane.has_unseen_output then
 			result = true
 			break
 		end
 	end
-	__HAS_UNSEEN_OUTPUT = result
 	return result
 end
 
 -- configuration of the tabline plugin
---
 
 tabline.setup({
 	options = {
@@ -238,6 +371,10 @@ local tabline_scheme = tabline.get_colors()
 
 tabline.setup({
 	options = {
+
+		-- THEME
+
+		theme = config.color_scheme,
 		color_overrides = {
 			tab = {
 				inactive = {
@@ -265,7 +402,13 @@ tabline.setup({
 			-- right = LOWER_RIGHT_WEDGE,
 		},
 	},
+
+	-- SECTIONS DEFINITIONS
+
 	sections = {
+
+		-- LEFT SECTION
+
 		tabline_a = { {
 			"mode",
 			fmt = function(str)
@@ -274,6 +417,9 @@ tabline.setup({
 		} },
 		tabline_b = { "workspace" },
 		tabline_c = { " " },
+
+		-- ACTIVE TAB
+
 		tab_active = {
 			{ Attribute = { Intensity = "Bold" } },
 			{ Foreground = { Color = scheme.tab_bar.active_tab.fg_color } },
@@ -284,20 +430,13 @@ tabline.setup({
 			{ Background = { Color = tabline_scheme.tab.active.bg } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
+			function(tab)
+				return get_process_icon(get_process_name(tab))
+			end,
 			{ Attribute = { Intensity = "Bold" } },
 			" ",
 			function(tab)
-				local result = ""
-				local cwd = tab.active_pane.current_working_dir
-				if cwd then
-					cwd = cwd.file_path:gsub(HOME, "~")
-					if #cwd > TABSIZE then
-						result = wezterm.nerdfonts.cod_ellipsis .. truncate_path(cwd, TABSIZE)
-					else
-						result = cwd
-					end
-				end
-				return result
+				return get_cwd(tab)
 			end,
 			" ",
 			{ "zoomed", padding = 0 },
@@ -307,22 +446,26 @@ tabline.setup({
 			UPPER_LEFT_WEDGE,
 			" ",
 		},
+
+		-- INACTIVE TAB
+
 		tab_inactive = {
 			{ Attribute = { Italic = true } },
 			{ Foreground = { Color = scheme.selection_bg } },
 			{ Background = { Color = scheme.tab_bar.active_tab.fg_color } },
 			LOWER_RIGHT_WEDGE,
-			-- {
-			-- 	Foreground = {
-			-- 		Color = function(tab)
-			-- 			if has_unseen_output(tab) then
-			-- 				return scheme.ansi[2]
-			-- 			else
-			-- 				return scheme.tab_bar.inactive_tab.fg_color
-			-- 			end
-			-- 		end,
-			-- 	},
-			-- },
+			{
+				Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color },
+				-- Foreground = {
+				-- 	Color = function(tab_id)
+				-- 		if has_unseen_output(tab_id) then
+				-- 			return scheme.ansi[2]
+				-- 		else
+				-- 			return scheme.tab_bar.inactive_tab.fg_color
+				-- 		end
+				-- 	end,
+				-- },
+			},
 			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
 			{ Background = { Color = scheme.selection_bg } },
 			"index",
@@ -333,67 +476,52 @@ tabline.setup({
 			{ Attribute = { Italic = true } },
 			{
 				"process",
-				process_to_icon = {
-					["apt"] = wezterm.nerdfonts.dev_debian,
-					["bash"] = wezterm.nerdfonts.cod_terminal_bash,
-					["bat"] = wezterm.nerdfonts.md_bat,
-					["cmd.exe"] = wezterm.nerdfonts.md_console_line,
-					["curl"] = wezterm.nerdfonts.md_flattr,
-					["debug"] = wezterm.nerdfonts.cod_debug,
-					["default"] = wezterm.nerdfonts.md_application,
-					["docker"] = wezterm.nerdfonts.linux_docker,
-					["docker-compose"] = wezterm.nerdfonts.linux_docker,
-					["git"] = wezterm.nerdfonts.dev_git,
-					["go"] = wezterm.nerdfonts.md_language_go,
-					["lazydocker"] = wezterm.nerdfonts.linux_docker,
-					["lazygit"] = wezterm.nerdfonts.cod_github,
-					["lua"] = wezterm.nerdfonts.seti_lua,
-					["make"] = wezterm.nerdfonts.seti_makefile,
-					["nix"] = wezterm.nerdfonts.linux_nixos,
-					["node"] = wezterm.nerdfonts.md_nodejs,
-					["npm"] = wezterm.nerdfonts.md_npm,
-					["nvim"] = wezterm.nerdfonts.custom_neovim,
-					["psql"] = wezterm.nerdfonts.dev_postgresql,
-					["zsh"] = wezterm.nerdfonts.dev_terminal,
-					-- and more...
-				},
+				process_to_icon = process_icons,
 				padding = { left = 0, right = 1 },
 			},
+			function(tab)
+				return get_cwd_postfix(tab)
+			end,
 			{ Foreground = { Color = tabline_scheme.tab.inactive.bg } },
 			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
 			UPPER_LEFT_WEDGE,
 			" ",
 		},
-		tabline_x = { "ram", { "cpu", throttle = 3 } },
+
+		-- RIGHT SECTIONS
+
+		-- tabline_x = { "ram", { "cpu", throttle = 3 } },
+		tabline_x = {},
 		tabline_y = {
 			{
 				"datetime",
-				style = "%a, %d-%b-%y %H:%M",
+				-- style = "%a, %d-%b-%y %H:%M",
+				style = " %d-%b %H:%M",
 				hour_to_icon = {
-					["00"] = wezterm.nerdfonts.md_clock_time_twelve_outline,
-					["01"] = wezterm.nerdfonts.md_clock_time_one_outline,
-					["02"] = wezterm.nerdfonts.md_clock_time_two_outline,
-					["03"] = wezterm.nerdfonts.md_clock_time_three_outline,
-					["04"] = wezterm.nerdfonts.md_clock_time_four_outline,
-					["05"] = wezterm.nerdfonts.md_clock_time_five_outline,
-					["06"] = wezterm.nerdfonts.md_clock_time_six_outline,
-					["07"] = wezterm.nerdfonts.md_clock_time_seven_outline,
-					["08"] = wezterm.nerdfonts.md_clock_time_eight_outline,
-					["09"] = wezterm.nerdfonts.md_clock_time_nine_outline,
-					["10"] = wezterm.nerdfonts.md_clock_time_ten_outline,
-					["11"] = wezterm.nerdfonts.md_clock_time_eleven_outline,
-					["12"] = wezterm.nerdfonts.md_clock_time_twelve,
-					["13"] = wezterm.nerdfonts.md_clock_time_one,
-					["14"] = wezterm.nerdfonts.md_clock_time_two,
-					["15"] = wezterm.nerdfonts.md_clock_time_three,
-					["16"] = wezterm.nerdfonts.md_clock_time_four,
-					["17"] = wezterm.nerdfonts.md_clock_time_five,
-					["18"] = wezterm.nerdfonts.md_clock_time_six,
-					["19"] = wezterm.nerdfonts.md_clock_time_seven,
-					["20"] = wezterm.nerdfonts.md_clock_time_eight,
-					["21"] = wezterm.nerdfonts.md_clock_time_nine,
-					["22"] = wezterm.nerdfonts.md_clock_time_ten,
-					["23"] = wezterm.nerdfonts.md_clock_time_eleven,
+					["00"] = nerdfonts.md_clock_time_twelve_outline,
+					["01"] = nerdfonts.md_clock_time_one_outline,
+					["02"] = nerdfonts.md_clock_time_two_outline,
+					["03"] = nerdfonts.md_clock_time_three_outline,
+					["04"] = nerdfonts.md_clock_time_four_outline,
+					["05"] = nerdfonts.md_clock_time_five_outline,
+					["06"] = nerdfonts.md_clock_time_six_outline,
+					["07"] = nerdfonts.md_clock_time_seven_outline,
+					["08"] = nerdfonts.md_clock_time_eight_outline,
+					["09"] = nerdfonts.md_clock_time_nine_outline,
+					["10"] = nerdfonts.md_clock_time_ten_outline,
+					["11"] = nerdfonts.md_clock_time_eleven_outline,
+					["12"] = nerdfonts.md_clock_time_twelve,
+					["13"] = nerdfonts.md_clock_time_one,
+					["14"] = nerdfonts.md_clock_time_two,
+					["15"] = nerdfonts.md_clock_time_three,
+					["16"] = nerdfonts.md_clock_time_four,
+					["17"] = nerdfonts.md_clock_time_five,
+					["18"] = nerdfonts.md_clock_time_six,
+					["19"] = nerdfonts.md_clock_time_seven,
+					["20"] = nerdfonts.md_clock_time_eight,
+					["21"] = nerdfonts.md_clock_time_nine,
+					["22"] = nerdfonts.md_clock_time_ten,
+					["23"] = nerdfonts.md_clock_time_eleven,
 				},
 			},
 		},
@@ -406,13 +534,17 @@ tabline.apply_to_config(config)
 config.tab_bar_at_bottom = true
 config.status_update_interval = TAB_UPDATE_INTERVAL
 
+---------------
+-- TITLE BAR
+---------------
+
 -- Title bar
 config.window_decorations = "RESIZE|TITLE"
 
 ---------------
 -- KEY BINDINGS
 ---------------
---
+
 -- Disable default keybindings
 config.disable_default_key_bindings = true
 
@@ -553,7 +685,10 @@ config.keys = {
 	},
 }
 
--- smart_splits configuration
+---------------
+-- SMART_SPLIT
+---------------
+
 smart_splits.apply_to_config(config, {
 	-- the default config is here, if you'd like to use the default keys,
 	-- you can omit this configuration table parameter and just use
