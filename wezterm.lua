@@ -176,6 +176,34 @@ end)
 -- UI APPEARANCE
 ----------------
 
+-- Fonts configuration
+config.font = wezterm.font_with_fallback({
+	{
+		family = "Operator Mono Lig",
+		weight = "Light",
+		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
+		assume_emoji_presentation = false,
+	},
+	{
+		family = "Operator Mono SSm Lig",
+		weight = "Book",
+		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
+		assume_emoji_presentation = false,
+	},
+	{
+		family = "Operator Mono SSm Lig",
+		weight = "Medium",
+		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
+		assume_emoji_presentation = false,
+	},
+	{ family = "Hack Nerd Font Mono" },
+	{ family = "Symbols Nerd Font Mono" },
+})
+
+config.use_cap_height_to_scale_fallback_fonts = true
+
+config.font_size = 15
+
 -- Configuration of the tab bar
 
 local TICKS = 0
@@ -377,17 +405,6 @@ tabline.setup({
 tabline.apply_to_config(config)
 config.tab_bar_at_bottom = true
 config.status_update_interval = TAB_UPDATE_INTERVAL
-
--- Fonts configuration
-config.font = wezterm.font_with_fallback({
-	{ family = "Operator Mono SSm Lig", harfbuzz_features = { "liga=1", "calt=1", "clig=1" } },
-	{ family = "Operator Mono Lig", harfbuzz_features = { "liga=1", "calt=1", "clig=1" } },
-	{ family = "Symbols Nerd Font" },
-})
-
-config.use_cap_height_to_scale_fallback_fonts = true
-
-config.font_size = 15
 
 -- Title bar
 config.window_decorations = "RESIZE|TITLE"
