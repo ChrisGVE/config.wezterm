@@ -4,10 +4,11 @@
 --
 -- Pull in the wezterm API
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
+local mux = wezterm.mux
 
 -- Install plugins
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
-local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
@@ -280,6 +281,11 @@ local function get_process_icon(process_name)
 	return icon .. " "
 end
 
+-- function returns the tab icon according to its process
+local function get_tab_icon(tab)
+	return get_process_icon(get_process_name(tab))
+end
+
 -- function returns the current working directory by path only if the process is a shell
 local function get_cwd_postfix(tab)
 	local postfix = ""
@@ -288,6 +294,28 @@ local function get_cwd_postfix(tab)
 		postfix = "(" .. get_cwd(tab) .. ")"
 	end
 	return postfix
+end
+
+-- function returns the attribute in case the inactive tab has unseen output
+local function has_unseen_output_attribute(tab, opts)
+	local result = { Foreground = { Color = "blue" } }
+	for index, pane in ipairs(tab.panes) do
+		if pane.has_unseen_output then
+			result = { Foreground = { Color = "red" } }
+		end
+	end
+	print(result)
+	return result
+end
+
+-- function returns a bell in case the inactive tab has unseen output
+local function has_unseen_output_bell(tab, opts)
+	for _, pane in ipairs(tab.panes) do
+		if pane.has_unseen_output then
+			return "  "
+		end
+	end
+	return ""
 end
 
 ----------------
@@ -675,7 +703,7 @@ tabline.setup({
 		} },
 		tabline_b = {
 			function()
-				local workspace = wezterm.mux.get_active_workspace()
+				local workspace = mux.get_active_workspace()
 				if workspace == config.default_workspace then
 					return ""
 				else
@@ -697,9 +725,7 @@ tabline.setup({
 			{ Background = { Color = tabline_scheme.tab.active.bg } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
-			function(tab)
-				return get_process_icon(get_process_name(tab))
-			end,
+			get_tab_icon,
 			{ Attribute = { Intensity = "Bold" } },
 			" ",
 			function(tab)
@@ -729,15 +755,14 @@ tabline.setup({
 			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
+			-- has_unseen_output_attribute,
+			has_unseen_output_bell,
+			"ResetAttributes",
+			get_tab_icon,
 			{ Attribute = { Italic = true } },
-			{
-				"process",
-				process_to_icon = process_icons,
-				padding = { left = 0, right = 1 },
-			},
-			function(tab)
-				return get_cwd_postfix(tab)
-			end,
+			get_process_name,
+			" ",
+			get_cwd_postfix,
 			{ Foreground = { Color = tabline_scheme.tab.inactive.bg } },
 			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
 			UPPER_LEFT_WEDGE,
