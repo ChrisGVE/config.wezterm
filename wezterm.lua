@@ -13,7 +13,7 @@ local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/s
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
 -- Update the plugins
-wezterm.plugin.update_all()
+-- wezterm.plugin.update_all()
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -448,7 +448,7 @@ config.default_workspace = "~"
 
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
 
-resurrect.change_state_save_dir(STATE .. "/wezterm/resurrect/")
+resurrect.change_state_save_dir(STATE .. "/wezterm/resurrect")
 
 resurrect.periodic_save({
 	interval_seconds = 120, -- s
