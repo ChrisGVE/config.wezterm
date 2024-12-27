@@ -318,6 +318,16 @@ local function has_unseen_output_bell(tab, opts)
 	return ""
 end
 
+-- function returns an icon for zoomed panes
+local function zoomed(tab, opts)
+	for _, pane in ipairs(tab.panes) do
+		if pane.is_zoomed then
+			return " "
+		end
+	end
+	return ""
+end
+
 ----------------
 -- FONTS
 ----------------
@@ -732,7 +742,7 @@ tabline.setup({
 				return get_cwd(tab)
 			end,
 			" ",
-			{ "zoomed", padding = 0 },
+			zoomed,
 			" ",
 			{ Foreground = { Color = tabline_scheme.tab.active.bg } },
 			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
