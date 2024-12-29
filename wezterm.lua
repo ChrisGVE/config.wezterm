@@ -127,8 +127,7 @@ local process_custom_icons = {
 	["kuberlr"] = nerdfonts.md_kubernetes,
 	["python"] = nerdfonts.md_language_python,
 	["ssh"] = nerdfonts.md_ssh,
-	["taskwarrior-tui"] = nerdfonts.cod_tasklist,
-	["tt"] = nerdfonts.cod_tasklist,
+	["taskwarrior-tui"] = " ",
 	["wget"] = nerdfonts.md_arrow_down_box,
 }
 
@@ -272,7 +271,7 @@ end
 local function get_process_icon(process_name)
 	local icon = ""
 	for process, icn in pairs(process_icons) do
-		if process_name:lower():match("^" .. process .. ".*") then
+		if process_name:lower():match("^" .. process .. ".*") or process_name:lower() == process then
 			icon = icn
 			break
 		end
