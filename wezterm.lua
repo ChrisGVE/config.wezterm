@@ -440,6 +440,8 @@ local standard_keys = {
 	{ mods = "LEADER", key = "Y", action = wezterm.action.CopyTo("PrimarySelection") },
 	{ mods = "LEADER", key = "P", action = wezterm.action.PasteFrom("PrimarySelection") },
 	{ mods = "LEADER", key = "c", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
+	{ mods = "LEADER", key = ",", action = wezterm.action.MoveTabRelative(-1) },
+	{ mods = "LEADER", key = ".", action = wezterm.action.MoveTabRelative(1) },
 	-- { mods = "LEADER", key = "w", action = wezterm.action.CloseCurrentTab({ confirm = true }) },
 	-- { mods = "LEADER", key = "q", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
 	{ mods = "LEADER", key = "d", action = wezterm.action.ShowDebugOverlay },
