@@ -99,8 +99,8 @@ local process_default_icons = {
 	["powershell.exe"] = nerdfonts.md_console,
 	["psql"] = nerdfonts.dev_postgresql,
 	["pwsh.exe"] = nerdfonts.md_console,
-	["rpm"] = nerdfonts.dev_redhat,
 	["redis"] = nerdfonts.dev_redis,
+	["rpm"] = nerdfonts.dev_redhat,
 	["ruby"] = nerdfonts.cod_ruby,
 	["rust"] = nerdfonts.dev_rust,
 	["serial"] = nerdfonts.md_serial_port,
@@ -121,13 +121,15 @@ local process_default_icons = {
 local process_custom_icons = {
 	-- ["brew"] = nerdfonts.dev_homebrew,
 	["brew"] = " ",
-	["taskwarrior-tui"] = nerdfonts.fa_tasks,
-	["wget"] = nerdfonts.md_arrow_down_box,
 	["curl"] = nerdfonts.md_arrow_down_box,
 	["gitui"] = nerdfonts.dev_github_badge,
 	["kubectl"] = nerdfonts.md_kubernetes,
 	["kuberlr"] = nerdfonts.md_kubernetes,
+	["python"] = nerdfonts.md_language_python,
 	["ssh"] = nerdfonts.md_ssh,
+	["taskwarrior-tui"] = nerdfonts.cod_tasklist,
+	["tt"] = nerdfonts.cod_tasklist,
+	["wget"] = nerdfonts.md_arrow_down_box,
 }
 
 -------------------
@@ -270,7 +272,7 @@ end
 local function get_process_icon(process_name)
 	local icon = ""
 	for process, icn in pairs(process_icons) do
-		if process_name:lower():match("^" .. process) then
+		if process_name:lower():match("^" .. process .. ".*") then
 			icon = icn
 			break
 		end
