@@ -305,7 +305,6 @@ local function has_unseen_output_attribute(tab, opts)
 			result = { Foreground = { Color = "red" } }
 		end
 	end
-	print(result)
 	return result
 end
 
@@ -445,6 +444,7 @@ local standard_keys = {
 	-- { mods = "LEADER", key = "w", action = wezterm.action.CloseCurrentTab({ confirm = true }) },
 	-- { mods = "LEADER", key = "q", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
 	{ mods = "LEADER", key = "d", action = wezterm.action.ShowDebugOverlay },
+	{ mods = "ALT", key = "x", action = wezterm.action.ShowDebugOverlay },
 	{ mods = "LEADER", key = "?", action = wezterm.action.ActivateCommandPalette },
 	{ mods = "LEADER", key = "v", action = wezterm.action.ActivateCopyMode },
 }
@@ -475,7 +475,7 @@ resurrect.set_encryption({
 	enable = true,
 	method = "/usr/local/bin/rage",
 	private_key = HOME .. "/.secret/rage-wezterm.txt",
-	public_key = "age1xvq9z8m4jn9zsff0sfls8rzk40r8fvrzdlaqnah6ttdfqfzxcyts4m88r9",
+	public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
 })
 
 wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
@@ -606,6 +606,8 @@ local extended_keys = {
 				description = "Select State to Restore and press Enter = accept, Esc = cancel, / = filter",
 				fuzzy_description = "Search State to Restore: ",
 				is_fuzzy = true,
+				show_state_with_date = true,
+				date_format = "%d-%b-%Y %H:%M",
 			})
 		end),
 	},
@@ -621,6 +623,8 @@ local extended_keys = {
 				description = "Select State to Delete and press Enter = accept, Esc = cancel, / = filter",
 				fuzzy_description = "Search State to Delete: ",
 				is_fuzzy = true,
+				show_state_with_date = true,
+				date_format = "%d-%b-%Y %H:%M",
 			})
 		end),
 	},
