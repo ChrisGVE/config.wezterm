@@ -354,7 +354,7 @@ config.font_size = 16
 ----------------
 -- LAUNCH MENU
 ----------------
-print(process_icons["taskwarrior-tui"])
+
 config.launch_menu = {
 	{
 		label = process_icons["tmux"] .. "  tmux main",
