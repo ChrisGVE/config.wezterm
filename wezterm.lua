@@ -26,6 +26,9 @@ config.set_environment_variables = {
 	PATH = os.getenv("PATH") .. ":/usr/local/bin",
 }
 
+-- set the default shell
+config.default_prog = { "/usr/local/bin/zsh" }
+
 -- Enable kitty's image protocol
 config.enable_kitty_graphics = true
 
@@ -348,6 +351,25 @@ config.use_cap_height_to_scale_fallback_fonts = true
 config.font_size = 16
 
 ----------------
+-- LAUNCH MENU
+----------------
+config.launch_menu = {
+	{
+		label = "tmux main",
+		args = { "tmux", "new-session", "-ADs main" },
+		cwd = "~",
+	},
+	{
+		label = "tmux config",
+		args = { "tmux", "new-session", "-ADs config" },
+		cwd = "~/.config",
+	},
+	{
+		args = { "btop" },
+	},
+}
+
+----------------
 -- NOTIFICATIONS
 ----------------
 
@@ -420,6 +442,7 @@ local standard_keys = {
 	{ mods = "LEADER", key = "\\", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
 	{ mods = "LEADER|SHIFT", key = "|", action = wezterm.action.SplitPane({ direction = "Right", top_level = true }) },
 	{ mods = "LEADER", key = "z", action = wezterm.action.TogglePaneZoomState },
+	{ mods = "CMD", key = "z", action = wezterm.action.TogglePaneZoomState },
 	{ mods = "LEADER", key = "Space", action = wezterm.action.RotatePanes("Clockwise") },
 	{ mods = "LEADER", key = "0", action = wezterm.action.PaneSelect({ mode = "SwapWithActive" }) },
 	{ mods = "LEADER", key = "1", action = wezterm.action.ActivateTab(0) },
@@ -447,6 +470,15 @@ local standard_keys = {
 	{ mods = "ALT", key = "x", action = wezterm.action.ShowDebugOverlay },
 	{ mods = "LEADER", key = "?", action = wezterm.action.ActivateCommandPalette },
 	{ mods = "LEADER", key = "v", action = wezterm.action.ActivateCopyMode },
+	{ mods = "LEADER", key = "l", action = wezterm.action.ShowLauncher },
+	{
+		mods = "LEADER|SHIFT",
+		key = "l",
+		action = wezterm.action.ShowLauncherArgs({
+			flags = "FUZZY|LAUNCH_MENU_ITEMS|DOMAINS|TABS|WORKSPACES|COMMANDS",
+			title = "Launcher",
+		}),
+	},
 }
 
 --**********************
@@ -666,7 +698,8 @@ config.keys = deepMerge(standard_keys, extended_keys)
 -- Initial setup to map the color_scheme to the tab_line scheme
 tabline.setup({
 	options = {
-		theme = config.color_scheme,
+		-- theme = config.color_scheme,
+		theme = "Catppuccin Mocha",
 	},
 })
 
@@ -679,7 +712,6 @@ tabline.setup({
 
 		-- THEME
 
-		theme = config.color_scheme,
 		color_overrides = {
 			tab = {
 				inactive = {
@@ -737,7 +769,9 @@ tabline.setup({
 			{ Foreground = { Color = scheme.tab_bar.active_tab.fg_color } },
 			{ Background = { Color = scheme.selection_fg } },
 			UPPER_LEFT_WEDGE,
-			"index",
+			function(tab)
+				return tab.tab_index + 1
+			end,
 			{ Foreground = { Color = scheme.selection_fg } },
 			{ Background = { Color = tabline_scheme.tab.active.bg } },
 			UPPER_LEFT_WEDGE,
@@ -767,7 +801,9 @@ tabline.setup({
 			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
 			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
 			{ Background = { Color = scheme.selection_bg } },
-			"index",
+			function(tab)
+				return tab.tab_index + 1
+			end,
 			{ Foreground = { Color = scheme.selection_bg } },
 			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
 			UPPER_LEFT_WEDGE,
@@ -833,6 +869,8 @@ tabline.apply_to_config(config)
 config.tab_bar_at_bottom = true
 config.status_update_interval = TAB_UPDATE_INTERVAL
 
+config.show_new_tab_button_in_tab_bar = true
+
 ---------------
 -- TITLE BAR
 ---------------
@@ -840,7 +878,7 @@ config.status_update_interval = TAB_UPDATE_INTERVAL
 -- TODO: work on the title bar which is very bare
 
 -- Title bar
-config.window_decorations = "RESIZE|TITLE"
+config.window_decorations = "TITLE"
 
 ---------------
 -- SMART_SPLIT
