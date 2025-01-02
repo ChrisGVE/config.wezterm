@@ -885,7 +885,7 @@ config.show_new_tab_button_in_tab_bar = true
 -- TODO: work on the title bar which is very bare
 
 -- Title bar
-config.window_decorations = "TITLE"
+config.window_decorations = "RESIZE|TITLE"
 
 ---------------
 -- SMART_SPLIT
