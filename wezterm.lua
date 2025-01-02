@@ -131,6 +131,7 @@ local process_custom_icons = {
 	["python"] = nerdfonts.md_language_python,
 	["ssh"] = nerdfonts.md_ssh,
 	["taskwarrior-tui"] = " ",
+	["tmux"] = nerdfonts.cod_terminal_tmux,
 	["wget"] = nerdfonts.md_arrow_down_box,
 }
 
@@ -353,18 +354,24 @@ config.font_size = 16
 ----------------
 -- LAUNCH MENU
 ----------------
+print(process_icons["taskwarrior-tui"])
 config.launch_menu = {
 	{
-		label = "tmux main",
+		label = process_icons["tmux"] .. "  tmux main",
 		args = { "tmux", "new-session", "-ADs main" },
 		cwd = "~",
 	},
 	{
-		label = "tmux config",
+		label = process_icons["tmux"] .. "  tmux config",
 		args = { "tmux", "new-session", "-ADs config" },
 		cwd = "~/.config",
 	},
 	{
+		label = process_icons["taskwarrior-tui"] .. "  taskwarrior",
+		args = { "taskwarrior-tui" },
+	},
+	{
+		label = process_icons["btop"] .. "  btop",
 		args = { "btop" },
 	},
 }
@@ -419,7 +426,7 @@ end
 config.disable_default_key_bindings = true
 
 -- Define the LEADER key
-config.leader = { key = "s", mods = "CTRL", timeout_milliseconds = 1500 }
+config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1500 }
 
 -- Key configuration
 local standard_keys = {
