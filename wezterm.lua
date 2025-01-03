@@ -51,8 +51,35 @@ local FORWARDSLASH_SEPARATOR = nerdfonts.ple_forwardslash_separator
 local HOME = os.getenv("HOME")
 local STATE = os.getenv("XDG_STATE_HOME") or HOME .. "/.local/state"
 
-local TABSIZE = 20
+local TAB_TEXT_SIZE = 20
+local TAB_MAX_SIZE = 28
 local TAB_UPDATE_INTERVAL = 500 -- ms
+
+local CATPPUCCIN_MOCHA_ROSEWATER = "#f5e0dc"
+local CATPPUCCIN_MOCHA_FLAMINGO = "#f2cdcd"
+local CATPPUCCIN_MOCHA_PINK = "#f5c2e7"
+local CATPPUCCIN_MOCHA_MAUVE = "#cba6f7"
+local CATPPUCCIN_MOCHA_RED = "#f38ba8"
+local CATPPUCCIN_MOCHA_MAROON = "#eba0ac"
+local CATPPUCCIN_MOCHA_PEACH = "#fab387"
+local CATPPUCCIN_MOCHA_YELLOW = "#f9e2af"
+local CATPPUCCIN_MOCHA_GREEN = "#a6e3a1"
+local CATPPUCCIN_MOCHA_TEAL = "#94e2d5"
+local CATPPUCCIN_MOCHA_SKY = "#89dceb"
+local CATPPUCCIN_MOCHA_SAPPHIRE = "#74c7ec"
+local CATPPUCCIN_MOCHA_BLUE = "#89b4fa"
+local CATPPUCCIN_MOCHA_LAVENDER = "#b4befe"
+local CATPPUCCIN_MOCHA_TEXT = "#c0caf5"
+local CATPPUCCIN_MOCHA_SUBTEXT_1 = "#a9b1d6"
+local CATPPUCCIN_MOCHA_SUBTEXT_0 = "#a5adc8"
+local CATPPUCCIN_MOCHA_OVERLAY_2 = "#9399b2"
+local CATPPUCCIN_MOCHA_OVERLAY_1 = "#7f849c"
+local CATPPUCCIN_MOCHA_OVERLAY_0 = "#6c7086"
+local CATPPUCCIN_MOCHA_SURFACE_1 = "#45455a"
+local CATPPUCCIN_MOCHA_SURFACE_0 = "#313244"
+local CATPPUCCIN_MOCHA_BASE = "#1e1e2e"
+local CATPPUCCIN_MOCHA_MANTLE = "#181825"
+local CATPPUCCIN_MOCHA_CRUST = "#11111b"
 
 -- Selecting the color scheme
 config.color_scheme = "Catppuccin Mocha"
@@ -234,11 +261,14 @@ end
 -- function returns the current working directory for the tab
 local function get_cwd(tab)
 	local result = ""
+	if tab == nil then
+		return result
+	end
 	local cwd = tab.active_pane.current_working_dir
 	if cwd then
 		cwd = cwd.file_path:gsub(HOME, "~")
-		if #cwd > TABSIZE then
-			result = nerdfonts.cod_ellipsis .. truncate_path(cwd, TABSIZE)
+		if #cwd > TAB_TEXT_SIZE then
+			result = nerdfonts.cod_ellipsis .. truncate_path(cwd, TAB_TEXT_SIZE)
 		else
 			result = cwd
 		end
@@ -249,6 +279,9 @@ end
 -- get the name of the process running in the foreground for the tab
 local function get_process_name(tab)
 	local foreground_process_name = ""
+	if tab == nil then
+		return foreground_process_name
+	end
 	-- get the foreground process name if available
 	if tab.active_pane and tab.active_pane.foreground_process_name then
 		foreground_process_name = tab.active_pane.foreground_process_name
@@ -271,6 +304,9 @@ end
 -- function returns the process icon for the process name
 local function get_process_icon(process_name)
 	local icon = ""
+	if process_name == "" then
+		return process_icons["default"]
+	end
 	for process, icn in pairs(process_icons) do
 		if process_name:lower():match("^" .. process .. ".*") or process_name:lower() == process then
 			icon = icn
@@ -291,6 +327,9 @@ end
 -- function returns the current working directory by path only if the process is a shell
 local function get_cwd_postfix(tab)
 	local postfix = ""
+	if tab == nil then
+		return postfix
+	end
 	local process = get_process_name(tab)
 	if string.find("|bash|zsh|fish|tmux|fish|ksh|csh|", process) then
 		postfix = "(" .. get_cwd(tab) .. ")"
@@ -298,35 +337,26 @@ local function get_cwd_postfix(tab)
 	return postfix
 end
 
--- function returns the attribute in case the inactive tab has unseen output
-local function has_unseen_output_attribute(tab, opts)
-	local result = { Foreground = { Color = "blue" } }
-	for index, pane in ipairs(tab.panes) do
-		if pane.has_unseen_output then
-			result = { Foreground = { Color = "red" } }
-		end
-	end
-	return result
-end
-
--- function returns a bell in case the inactive tab has unseen output
-local function has_unseen_output_bell(tab, opts)
-	for _, pane in ipairs(tab.panes) do
-		if pane.has_unseen_output then
-			return "  "
-		end
-	end
-	return ""
-end
-
 -- function returns an icon for zoomed panes
 local function zoomed(tab, opts)
+	if tab == nil then
+		return ""
+	end
 	for _, pane in ipairs(tab.panes) do
 		if pane.is_zoomed then
 			return " "
 		end
 	end
 	return ""
+end
+
+-- function returns the index of the tab
+local function index(tab)
+	if tab ~= nil then
+		return tab.tab_index + 1
+	else
+		return ""
+	end
 end
 
 ----------------
@@ -716,15 +746,15 @@ config.keys = deepMerge(standard_keys, extended_keys)
 ----------------
 
 -- Initial setup to map the color_scheme to the tab_line scheme
-tabline.setup({
-	options = {
-		-- theme = config.color_scheme,
-		theme = "Catppuccin Mocha",
-	},
-})
+-- tabline.setup({
+-- 	options = {
+-- 		-- theme = config.color_scheme,
+-- 		theme = "Catppuccin Mocha",
+-- 	},
+-- })
 
 -- Retrieval of the color scheme
-local tabline_scheme = tabline.get_colors()
+-- local tabline_scheme = tabline.get_colors()
 
 -- Actual setup of the tab_line
 tabline.setup({
@@ -734,6 +764,10 @@ tabline.setup({
 
 		color_overrides = {
 			tab = {
+				active = {
+					fg = scheme.ansi[5],
+					-- bg = scheme.tab_bar.active_tab.bg_color,
+				},
 				inactive = {
 					fg = scheme.tab_bar.inactive_tab.fg_color,
 					bg = scheme.tab_bar.inactive_tab.bg_color,
@@ -743,14 +777,11 @@ tabline.setup({
 					bg = scheme.tab_bar.inactive_tab_hover.bg_color,
 				},
 			},
-		},
-		section_separators = {
-			left = HARD_LEFT_ARROW,
-			right = HARD_RIGHT_ARROW,
-		},
-		component_separators = {
-			left = SOFT_LEFT_ARROW,
-			right = SOFT_RIGHT_ARROW,
+			normal_mode = {
+				a = { bg = CATPPUCCIN_MOCHA_LAVENDER },
+				b = { fg = CATPPUCCIN_MOCHA_LAVENDER },
+				c = { fg = CATPPUCCIN_MOCHA_LAVENDER },
+			},
 		},
 		tab_separators = {
 			left = "",
@@ -764,13 +795,19 @@ tabline.setup({
 
 		-- LEFT SECTION
 
-		tabline_a = { {
-			"mode",
-			fmt = function(str)
-				return str:sub(1, 1)
-			end,
-		} },
+		tabline_a = {
+			{
+				"mode",
+				icons_enabled = true,
+				fmt = function(str)
+					return str:sub(1, 1)
+				end,
+			},
+		},
 		tabline_b = {
+			cond = function()
+				return mux.get_active_workspace() == config.default_workspace
+			end,
 			function()
 				local workspace = mux.get_active_workspace()
 				if workspace == config.default_workspace then
@@ -779,34 +816,32 @@ tabline.setup({
 					return nerdfonts.cod_terminal_tmux .. " " .. string.match(workspace, "[^/\\]+$")
 				end
 			end,
+			padding = 0,
 		},
-		tabline_c = { " " },
+		tabline_c = { cond = false },
 
 		-- ACTIVE TAB
 
 		tab_active = {
 			{ Attribute = { Intensity = "Bold" } },
+			{ Foreground = { Color = scheme.selection_fg } },
+			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
+			LOWER_RIGHT_WEDGE,
 			{ Foreground = { Color = scheme.tab_bar.active_tab.fg_color } },
 			{ Background = { Color = scheme.selection_fg } },
-			UPPER_LEFT_WEDGE,
-			function(tab)
-				return tab.tab_index + 1
-			end,
+			index,
 			{ Foreground = { Color = scheme.selection_fg } },
-			{ Background = { Color = tabline_scheme.tab.active.bg } },
+			{ Background = { Color = scheme.tab_bar.inactive_tab_edge } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
 			get_tab_icon,
 			{ Attribute = { Intensity = "Bold" } },
 			" ",
-			function(tab)
-				return get_cwd(tab)
-			end,
+			get_process_name,
 			" ",
 			zoomed,
-			" ",
-			{ Foreground = { Color = tabline_scheme.tab.active.bg } },
-			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
+			{ Foreground = { Color = scheme.tab_bar.inactive_tab_edge } },
+			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 			UPPER_LEFT_WEDGE,
 			" ",
 		},
@@ -816,37 +851,29 @@ tabline.setup({
 		tab_inactive = {
 			{ Attribute = { Italic = true } },
 			{ Foreground = { Color = scheme.selection_bg } },
-			{ Background = { Color = scheme.tab_bar.active_tab.fg_color } },
+			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 			LOWER_RIGHT_WEDGE,
 			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
-			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
 			{ Background = { Color = scheme.selection_bg } },
-			function(tab)
-				return tab.tab_index + 1
-			end,
+			index,
 			{ Foreground = { Color = scheme.selection_bg } },
-			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
+			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
-			-- has_unseen_output_attribute,
-			has_unseen_output_bell,
+			"output",
 			"ResetAttributes",
 			get_tab_icon,
 			{ Attribute = { Italic = true } },
 			get_process_name,
 			" ",
 			get_cwd_postfix,
-			{ Foreground = { Color = tabline_scheme.tab.inactive.bg } },
-			{ Background = { Color = tabline_scheme.tab.inactive.bg } },
-			UPPER_LEFT_WEDGE,
-			" ",
 		},
 
 		-- RIGHT SECTIONS
 
 		-- Removed this section to gain some space
-		-- tabline_x = { "ram", { "cpu", throttle = 3 } },
-		tabline_x = {},
+		tabline_x = { "cpu", throttle = 3 },
+		-- tabline_x = {},
 		tabline_y = {
 			{
 				"datetime",
@@ -886,10 +913,42 @@ tabline.setup({
 })
 
 tabline.apply_to_config(config)
-config.tab_bar_at_bottom = true
+config.tab_bar_at_bottom = false
 config.status_update_interval = TAB_UPDATE_INTERVAL
 
+config.tab_max_width = TAB_MAX_SIZE
 config.show_new_tab_button_in_tab_bar = true
+config.hide_tab_bar_if_only_one_tab = true
+config.use_fancy_tab_bar = true
+config.window_frame = {
+	font = wezterm.font({ family = "Operator Mono", weight = "Book" }),
+	font_size = 14,
+	active_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
+	inactive_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
+}
+config.colors = {
+	tab_bar = {
+		inactive_tab_edge = scheme.tab_bar.inactive_tab.bg_color,
+		active_tab = {
+			fg_color = CATPPUCCIN_MOCHA_BLUE,
+			bg_color = scheme.tab_bar.inactive_tab_edge,
+			italic = false,
+		},
+		inactive_tab = {
+			fg_color = scheme.foreground,
+			bg_color = scheme.tab_bar.inactive_tab.bg_color,
+			italic = true,
+		},
+		new_tab = {
+			bg_color = scheme.tab_bar.inactive_tab_edge,
+			fg_color = CATPPUCCIN_MOCHA_TEXT,
+		},
+		new_tab_hover = {
+			bg_color = scheme.tab_bar.inactive_tab.bg_color,
+			fg_color = CATPPUCCIN_MOCHA_RED,
+		},
+	},
+}
 
 ---------------
 -- TITLE BAR
