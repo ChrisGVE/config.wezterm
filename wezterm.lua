@@ -26,9 +26,6 @@ config.set_environment_variables = {
 	PATH = os.getenv("PATH") .. ":/usr/local/bin",
 }
 
--- set the default shell
-config.default_prog = { "/usr/local/bin/zsh" }
-
 -- Enable kitty's image protocol
 config.enable_kitty_graphics = true
 
@@ -357,22 +354,37 @@ config.font_size = 16
 
 config.launch_menu = {
 	{
-		label = process_icons["tmux"] .. "  tmux main",
-		args = { "tmux", "new-session", "-ADs main" },
-		cwd = "~",
+		label = process_icons["nvim"] .. "  config zsh",
+		args = { os.getenv("SHELL"), "-c", 'exec $EDITOR "' .. HOME .. '/.config/zsh/zshrc"' },
+		cwd = HOME .. "/.config/zsh",
 	},
 	{
-		label = process_icons["tmux"] .. "  tmux config",
-		args = { "tmux", "new-session", "-ADs config" },
-		cwd = "~/.config",
+		label = process_icons["nvim"] .. "  config neovim",
+		args = { os.getenv("SHELL"), "-c", "exec $EDITOR" },
+		cwd = HOME .. "/.config/nvim/lua",
 	},
+	{
+		label = process_icons["nvim"] .. "  config wezterm",
+		args = { os.getenv("SHELL"), "-c", 'exec $EDITOR "' .. wezterm.config_dir .. '/wezterm.lua"' },
+		cwd = HOME .. "/.config/wezterm",
+	},
+	-- {
+	-- 	label = process_icons["tmux"] .. "  tmux main",
+	-- 	args = { "tmux", "new-session", "-ADs main" },
+	-- 	cwd = "~",
+	-- },
+	-- {
+	-- 	label = process_icons["tmux"] .. "  tmux config",
+	-- 	args = { "tmux", "new-session", "-ADs config" },
+	-- 	cwd = "~/.config",
+	-- },
 	{
 		label = process_icons["taskwarrior-tui"] .. "  taskwarrior",
-		args = { "taskwarrior-tui" },
+		args = { os.getenv("SHELL"), "-c", "taskwarrior-tui" },
 	},
 	{
 		label = process_icons["btop"] .. "  btop",
-		args = { "btop" },
+		args = { os.getenv("SHELL"), "-c", "btop" },
 	},
 }
 
@@ -426,7 +438,8 @@ end
 config.disable_default_key_bindings = true
 
 -- Define the LEADER key
-config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1500 }
+config.leader = { key = "s", mods = "CTRL", timeout_milliseconds = 1500 }
+-- to be seen if the leader key can be changed contextually
 
 -- Key configuration
 local standard_keys = {
