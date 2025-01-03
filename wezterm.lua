@@ -926,6 +926,7 @@ config.window_frame = {
 	active_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
 	inactive_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
 }
+
 config.colors = {
 	tab_bar = {
 		inactive_tab_edge = scheme.tab_bar.inactive_tab.bg_color,
@@ -949,6 +950,12 @@ config.colors = {
 		},
 	},
 }
+
+----------------
+-- PANE SETTINGS
+----------------
+
+config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.7 }
 
 ---------------
 -- TITLE BAR
