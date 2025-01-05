@@ -96,6 +96,8 @@ local process_custom_icons = {
 	["tmux"] = nerdfonts.cod_terminal_tmux,
 }
 
+config.default_workspace = "~"
+
 -------------------
 -- HELPER FUNCTIONS
 -------------------
@@ -248,6 +250,7 @@ local resurrect_event_listeners = {
 local is_periodic_save = false
 wezterm.on("resurrect.periodic_save", function()
 	is_periodic_save = true
+	resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 end)
 
 for _, event in ipairs(resurrect_event_listeners) do
@@ -346,8 +349,6 @@ local standard_keys = {
 -- SMART WORKSPACE and RESURRECT
 --------------------------------
 
-config.default_workspace = "~"
-
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
 
 resurrect.change_state_save_dir(STATE .. "/wezterm/resurrect")
@@ -391,6 +392,11 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.selected", function(wind
 	resurrect.save_state(workspace_state.get_workspace_state())
 end)
 
+-- Write the current state when it has been selected
+wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace, label)
+	resurrect.write_current_state(label, "workspace")
+end)
+
 -- Load the state whenever I create a new workspace
 wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, path, label)
 	local workspace_state = resurrect.workspace_state
@@ -401,10 +407,11 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(windo
 		restore_text = true,
 		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
 	})
+	resurrect.write_current_state(label, "workspace")
 end)
 
 -- resurrect the last closed workspace
--- wezterm.on("gui-startup", resurrect.resurrect_on_gui_startup)
+wezterm.on("gui-startup", resurrect.resurrect_on_gui_startup)
 
 local extended_keys = {
 	-- SMART_WORKSPACE_SWITCHER
@@ -450,7 +457,9 @@ local extended_keys = {
 		mods = "ALT",
 		key = "w",
 		action = wezterm.action_callback(function(win, pane)
-			resurrect.save_state(resurrect.workspace_state.get_workspace_state())
+			local workspace_state = resurrect.workspace_state
+			resurrect.save_state(workspace_state.get_workspace_state())
+			resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 		end),
 	},
 
@@ -464,8 +473,10 @@ local extended_keys = {
 		mods = "ALT",
 		key = "s",
 		action = wezterm.action_callback(function(win, pane)
-			resurrect.save_state(resurrect.workspace_state.get_workspace_state())
+			local workspace_state = resurrect.workspace_state
+			resurrect.save_state(workspace_state.get_workspace_state())
 			resurrect.window_state.save_window_action()
+			resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 		end),
 	},
 
@@ -486,6 +497,7 @@ local extended_keys = {
 				if type == "workspace" then
 					local state = resurrect.load_state(id, "workspace")
 					resurrect.workspace_state.restore_workspace(state, opts)
+					resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 				elseif type == "window" then
 					local state = resurrect.load_state(id, "window")
 					resurrect.window_state.restore_window(pane:window(), state, opts)
