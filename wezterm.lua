@@ -85,126 +85,24 @@ local CATPPUCCIN_MOCHA_CRUST = "#11111b"
 config.color_scheme = "Catppuccin Mocha"
 local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
 
-local process_default_icons = {
-	["air"] = nerdfonts.md_language_go,
-	["apt"] = nerdfonts.dev_debian,
-	["bacon"] = nerdfonts.dev_rust,
-	["bash"] = nerdfonts.cod_terminal_bash,
-	["bat"] = nerdfonts.md_bat,
-	["btm"] = nerdfonts.md_chart_donut_variant,
-	["btop"] = nerdfonts.md_chart_areaspline,
-	["btop4win++"] = nerdfonts.md_chart_areaspline,
-	["bun"] = nerdfonts.md_hamburger,
-	["cargo"] = nerdfonts.dev_rust,
-	["chezmoi"] = nerdfonts.md_home_plus_outline,
-	["cmd.exe"] = nerdfonts.md_console_line,
-	["curl"] = nerdfonts.md_flattr,
-	["debug"] = nerdfonts.cod_debug,
-	["default"] = nerdfonts.md_application,
-	["docker"] = nerdfonts.linux_docker,
-	["docker-compose"] = nerdfonts.linux_docker,
-	["dpkg"] = nerdfonts.dev_debian,
-	["fish"] = nerdfonts.md_fish,
-	["gh"] = nerdfonts.dev_github_badge,
-	["git"] = nerdfonts.dev_git,
-	["go"] = nerdfonts.md_language_go,
-	["htop"] = nerdfonts.md_chart_areaspline,
-	["kubectl"] = nerdfonts.linux_docker,
-	["kuberlr"] = nerdfonts.linux_docker,
-	["lazydocker"] = nerdfonts.linux_docker,
-	["lazygit"] = nerdfonts.cod_github,
-	["lua"] = nerdfonts.seti_lua,
-	["make"] = nerdfonts.seti_makefile,
-	["nix"] = nerdfonts.linux_nixos,
-	["node"] = nerdfonts.md_nodejs,
-	["npm"] = nerdfonts.md_npm,
-	["nvim"] = nerdfonts.custom_neovim,
-	["pacman"] = nerdfonts.md_pac_man,
-	["paru"] = nerdfonts.md_pac_man,
-	["pnpm"] = nerdfonts.md_npm,
-	["postgresql"] = nerdfonts.dev_postgresql,
-	["powershell.exe"] = nerdfonts.md_console,
-	["psql"] = nerdfonts.dev_postgresql,
-	["pwsh.exe"] = nerdfonts.md_console,
-	["redis"] = nerdfonts.dev_redis,
-	["rpm"] = nerdfonts.dev_redhat,
-	["ruby"] = nerdfonts.cod_ruby,
-	["rust"] = nerdfonts.dev_rust,
-	["serial"] = nerdfonts.md_serial_port,
-	["ssh"] = nerdfonts.md_pipe,
-	["sudo"] = nerdfonts.fa_hashtag,
-	["tls"] = nerdfonts.md_power_socket,
-	["topgrade"] = nerdfonts.md_rocket_launch,
-	["unix"] = nerdfonts.md_bash,
-	["valkey"] = nerdfonts.dev_redis,
-	["vim"] = nerdfonts.dev_vim,
-	["yarn"] = nerdfonts.seti_yarn,
-	["yay"] = nerdfonts.md_pac_man,
-	["yazi"] = nerdfonts.md_duck,
-	["yum"] = nerdfonts.dev_redhat,
-	["zsh"] = nerdfonts.dev_terminal,
-}
-
 local process_custom_icons = {
-	-- ["brew"] = nerdfonts.dev_homebrew,
 	["brew"] = " ",
 	["curl"] = nerdfonts.md_arrow_down_box,
 	["gitui"] = nerdfonts.dev_github_badge,
 	["kubectl"] = nerdfonts.md_kubernetes,
 	["kuberlr"] = nerdfonts.md_kubernetes,
-	["python"] = nerdfonts.md_language_python,
-	["ssh"] = nerdfonts.md_ssh,
-	["taskwarrior-tui"] = " ",
+	["python"] = { nerdfonts.md_language_python, color = { fg = CATPPUCCIN_MOCHA_BLUE } },
+	["taskwarrior"] = { " ", color = { fg = CATPPUCCIN_MOCHA_PEACH } },
 	["tmux"] = nerdfonts.cod_terminal_tmux,
-	["wget"] = nerdfonts.md_arrow_down_box,
 }
 
 -------------------
 -- HELPER FUNCTIONS
 -------------------
 
-local function tableInspect(tbl, depth, indent, currentDepth)
-	depth = depth or 1 -- Limit recursion depth (optional)
-	indent = indent or 0 -- Current indentation level
-	currentDepth = currentDepth or 1 -- Tracks the current depth of recursion
-	local result = {}
-	local prefix = string.rep("  ", indent)
-
-	if type(tbl) ~= "table" then
-		return tostring(tbl) -- Handle non-table values directly
-	end
-
-	local keys = {}
-	for k in pairs(tbl) do
-		table.insert(keys, k)
-	end
-
-	-- Sort keys if at level 1 and their subtables contain "key"
-	if currentDepth == 1 then
-		table.sort(keys, function(a, b)
-			local ta, tb = tbl[a], tbl[b]
-			if type(ta) == "table" and type(tb) == "table" and ta["key"] and tb["key"] then
-				return tostring(ta["key"]):lower() < tostring(tb["key"]):lower()
-			end
-			return tostring(a):lower() < tostring(b):lower()
-		end)
-	end
-
-	for _, k in ipairs(keys) do
-		local v = tbl[k]
-		local key = tostring(k)
-		if type(v) == "table" and depth > 0 then
-			table.insert(result, prefix .. key .. " = {")
-			table.insert(result, tableInspect(v, depth - 1, indent + 1, currentDepth + 1))
-			table.insert(result, prefix .. "}")
-		else
-			table.insert(result, prefix .. key .. " = " .. tostring(v))
-		end
-	end
-
-	return table.concat(result, "\n")
-end
-
+---@param t1 table
+---@param t2 table
+---@return table
 local function deepMerge(t1, t2)
 	-- If both tables are arrays, concatenate them
 	if #t1 > 0 and #t2 > 0 then
@@ -237,107 +135,10 @@ local function deepMerge(t1, t2)
 	return merged
 end
 
--- Build the full table of icons
-local process_icons = deepMerge(process_default_icons, process_custom_icons)
-
--- truncate path
-local function truncate_path(path, max_chars)
-	-- Reverse the path for easier processing from the lowest folder level
-	local reversed_path = path:reverse()
-	-- Match up to max_chars without splitting folder names (stopping at '/')
-	local matched_length = 0
-	local truncated_reversed = ""
-	for segment in reversed_path:gmatch("[^/]+/") do
-		if matched_length + #segment > max_chars then
-			break
-		end
-		truncated_reversed = truncated_reversed .. segment
-		matched_length = matched_length + #segment
-	end
-	-- Reverse back to get the truncated path in original order
-	return truncated_reversed:reverse()
-end
-
--- function returns the current working directory for the tab
-local function get_cwd(tab)
-	local result = ""
-	if tab == nil then
-		return result
-	end
-	local cwd = tab.active_pane.current_working_dir
-	if cwd then
-		cwd = cwd.file_path:gsub(HOME, "~")
-		if #cwd > TAB_TEXT_SIZE then
-			result = nerdfonts.cod_ellipsis .. truncate_path(cwd, TAB_TEXT_SIZE)
-		else
-			result = cwd
-		end
-	end
-	return result
-end
-
--- get the name of the process running in the foreground for the tab
-local function get_process_name(tab)
-	local foreground_process_name = ""
-	if tab == nil then
-		return foreground_process_name
-	end
-	-- get the foreground process name if available
-	if tab.active_pane and tab.active_pane.foreground_process_name then
-		foreground_process_name = tab.active_pane.foreground_process_name
-		foreground_process_name = foreground_process_name:match("([^/\\]+)[/\\]?$") or foreground_process_name
-	end
-	-- fallback to the title if the foreground process name is unavailable
-	-- Wezterm uses OSC 1/2 escape sequences to guess the process name and set the title
-	-- see https://wezfurlong.org/wezterm/config/lua/pane/get_title.html
-	-- title defaults to 'wezterm' if another name is unavailable
-	if foreground_process_name == "" then
-		foreground_process_name = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
-	end
-	-- if the tab active pane contains a non-local domain, use the domain name
-	if foreground_process_name == "wezterm" then
-		foreground_process_name = tab.active_pane.domain_name ~= "local" and tab.active_pane.domain_name or "wezterm"
-	end
-	return foreground_process_name
-end
-
--- function returns the process icon for the process name
-local function get_process_icon(process_name)
-	local icon = ""
-	if process_name == "" then
-		return process_icons["default"]
-	end
-	for process, icn in pairs(process_icons) do
-		if process_name:lower():match("^" .. process .. ".*") or process_name:lower() == process then
-			icon = icn
-			break
-		end
-	end
-	if icon == "" then
-		icon = process_icons["default"]
-	end
-	return icon .. " "
-end
-
--- function returns the tab icon according to its process
-local function get_tab_icon(tab)
-	return get_process_icon(get_process_name(tab))
-end
-
--- function returns the current working directory by path only if the process is a shell
-local function get_cwd_postfix(tab)
-	local postfix = ""
-	if tab == nil then
-		return postfix
-	end
-	local process = get_process_name(tab)
-	if string.find("|bash|zsh|fish|tmux|fish|ksh|csh|", process) then
-		postfix = "(" .. get_cwd(tab) .. ")"
-	end
-	return postfix
-end
-
 -- function returns an icon for zoomed panes
+---@param tab table
+---@param opts table
+---@return string
 local function zoomed(tab, opts)
 	if tab == nil then
 		return ""
@@ -351,6 +152,8 @@ local function zoomed(tab, opts)
 end
 
 -- function returns the index of the tab
+---@param tab table
+---@return string
 local function index(tab)
 	if tab ~= nil then
 		return tab.tab_index + 1
@@ -382,41 +185,43 @@ config.font_size = 16
 -- LAUNCH MENU
 ----------------
 
-config.launch_menu = {
+local launch_menu = {
 	{
-		label = process_icons["nvim"] .. "  config zsh",
+		label = nerdfonts.custom_neovim .. "  config zsh",
 		args = { os.getenv("SHELL"), "-c", 'exec $EDITOR "' .. HOME .. '/.config/zsh/zshrc"' },
 		cwd = HOME .. "/.config/zsh",
 	},
 	{
-		label = process_icons["nvim"] .. "  config neovim",
+		label = nerdfonts.custom_neovim .. "  config neovim",
 		args = { os.getenv("SHELL"), "-c", "exec $EDITOR" },
 		cwd = HOME .. "/.config/nvim/lua",
 	},
 	{
-		label = process_icons["nvim"] .. "  config wezterm",
+		label = nerdfonts.custom_neovim .. "  config wezterm",
 		args = { os.getenv("SHELL"), "-c", 'exec $EDITOR "' .. wezterm.config_dir .. '/wezterm.lua"' },
 		cwd = HOME .. "/.config/wezterm",
 	},
-	-- {
-	-- 	label = process_icons["tmux"] .. "  tmux main",
-	-- 	args = { "tmux", "new-session", "-ADs main" },
-	-- 	cwd = "~",
-	-- },
-	-- {
-	-- 	label = process_icons["tmux"] .. "  tmux config",
-	-- 	args = { "tmux", "new-session", "-ADs config" },
-	-- 	cwd = "~/.config",
-	-- },
 	{
-		label = process_icons["taskwarrior-tui"] .. "  taskwarrior",
+		label = nerdfonts.cod_terminal_tmux .. "  tmux main",
+		args = { "tmux", "new-session", "-ADs main" },
+		cwd = "~",
+	},
+	{
+		label = nerdfonts.cod_terminal_tmux .. "  tmux config",
+		args = { "tmux", "new-session", "-ADs config" },
+		cwd = "~/.config",
+	},
+	{
+		label = "  taskwarrior",
 		args = { os.getenv("SHELL"), "-c", "taskwarrior-tui" },
 	},
 	{
-		label = process_icons["btop"] .. "  btop",
+		label = nerdfonts.md_chart_areaspline .. "  btop",
 		args = { os.getenv("SHELL"), "-c", "btop" },
 	},
 }
+
+config.launch_menu = launch_menu
 
 ----------------
 -- NOTIFICATIONS
@@ -750,17 +555,6 @@ config.keys = deepMerge(standard_keys, extended_keys)
 -- TAB BAR
 ----------------
 
--- Initial setup to map the color_scheme to the tab_line scheme
--- tabline.setup({
--- 	options = {
--- 		-- theme = config.color_scheme,
--- 		theme = "Catppuccin Mocha",
--- 	},
--- })
-
--- Retrieval of the color scheme
--- local tabline_scheme = tabline.get_colors()
-
 -- Actual setup of the tab_line
 tabline.setup({
 	options = {
@@ -839,10 +633,11 @@ tabline.setup({
 			{ Background = { Color = scheme.tab_bar.inactive_tab_edge } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
-			get_tab_icon,
 			{ Attribute = { Intensity = "Bold" } },
-			" ",
-			get_process_name,
+			{
+				process_to_icon = process_custom_icons,
+				"process",
+			},
 			" ",
 			zoomed,
 			{ Foreground = { Color = scheme.tab_bar.inactive_tab_edge } },
@@ -865,13 +660,12 @@ tabline.setup({
 			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 			UPPER_LEFT_WEDGE,
 			"ResetAttributes",
-			"output",
-			"ResetAttributes",
-			get_tab_icon,
 			{ Attribute = { Italic = true } },
-			get_process_name,
-			" ",
-			get_cwd_postfix,
+			{
+				process_to_icon = process_custom_icons,
+				"process",
+			},
+			"output",
 		},
 
 		-- RIGHT SECTIONS
