@@ -468,7 +468,7 @@ end
 config.disable_default_key_bindings = true
 
 -- Define the LEADER key
-config.leader = { key = "s", mods = "CTRL", timeout_milliseconds = 1500 }
+config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1500 }
 -- to be seen if the leader key can be changed contextually
 
 -- Key configuration
