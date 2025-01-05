@@ -521,6 +521,8 @@ local standard_keys = {
 	{ mods = "LEADER", key = "?", action = wezterm.action.ActivateCommandPalette },
 	{ mods = "LEADER", key = "v", action = wezterm.action.ActivateCopyMode },
 	{ mods = "LEADER", key = "l", action = wezterm.action.ShowLauncher },
+	{ mods = "ALT", key = "=", action = wezterm.action.IncreaseFontSize },
+	{ mods = "ALT", key = "-", action = wezterm.action.DecreaseFontSize },
 	{
 		mods = "LEADER|SHIFT",
 		key = "l",
@@ -595,6 +597,9 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(windo
 		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
 	})
 end)
+
+-- resurrect the last closed workspace
+-- wezterm.on("gui-startup", resurrect.resurrect_on_gui_startup)
 
 local extended_keys = {
 	-- SMART_WORKSPACE_SWITCHER
