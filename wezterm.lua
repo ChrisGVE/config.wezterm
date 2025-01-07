@@ -53,7 +53,8 @@ local STATE = os.getenv("XDG_STATE_HOME") or HOME .. "/.local/state"
 
 local TAB_TEXT_SIZE = 20
 local TAB_MAX_SIZE = 28
-local TAB_UPDATE_INTERVAL = 500 -- ms
+local TAB_UPDATE_INTERVAL = 250 -- ms
+local CPU_LOAD_INTERVAL = 2 -- s
 
 local CATPPUCCIN_MOCHA_ROSEWATER = "#f5e0dc"
 local CATPPUCCIN_MOCHA_FLAMINGO = "#f2cdcd"
@@ -195,7 +196,7 @@ local launch_menu = {
 	},
 	{
 		label = nerdfonts.custom_neovim .. "  config neovim",
-		args = { os.getenv("SHELL"), "-c", "exec $EDITOR" },
+		args = { os.getenv("SHELL"), "-c", "exec $EDITOR " .. HOME .. "/.config/nvim/lua" },
 		cwd = HOME .. "/.config/nvim/lua",
 	},
 	{
@@ -394,7 +395,7 @@ end)
 
 -- Write the current state when it has been selected
 wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace, label)
-	resurrect.write_current_state(label, "workspace")
+	resurrect.write_current_state(workspace, "workspace")
 end)
 
 -- Load the state whenever I create a new workspace
@@ -407,7 +408,7 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(windo
 		restore_text = true,
 		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
 	})
-	resurrect.write_current_state(label, "workspace")
+	resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 end)
 
 -- resurrect the last closed workspace
@@ -683,7 +684,7 @@ tabline.setup({
 		-- RIGHT SECTIONS
 
 		-- Removed this section to gain some space
-		tabline_x = { "cpu", throttle = 3 },
+		tabline_x = { "cpu", throttle = CPU_LOAD_INTERVAL },
 		-- tabline_x = {},
 		tabline_y = {
 			{
