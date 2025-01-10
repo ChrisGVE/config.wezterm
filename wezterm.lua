@@ -618,7 +618,7 @@ tabline.setup({
 		},
 		tabline_b = {
 			cond = function()
-				return mux.get_active_workspace() == config.default_workspace
+				return mux.get_active_workspace() ~= config.default_workspace
 			end,
 			function()
 				local workspace = mux.get_active_workspace()
