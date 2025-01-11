@@ -26,6 +26,9 @@ config.set_environment_variables = {
 	PATH = os.getenv("PATH") .. ":/usr/local/bin",
 }
 
+-- Default SHELL
+-- config.default_prog = { "/usr/local/bin/nu" }
+
 -- Enable kitty's image protocol
 config.enable_kitty_graphics = true
 
