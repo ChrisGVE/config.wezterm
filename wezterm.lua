@@ -6,14 +6,21 @@
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
 local mux = wezterm.mux
 
--- Install plugins
-local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
-local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
-local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
-local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+local is_mac = (wezterm.target_triple == "x86_64-apple-darwin" or wezterm.target_triple == "aarch64-apple-darwin")
 
 -- Update the plugins
--- wezterm.plugin.update_all()
+wezterm.plugin.update_all()
+
+-- Install plugins
+local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
+local resurrect
+if is_mac then
+	resurrect = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/resurrects.wezterm")
+else
+	resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrects.wezterm")
+end
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -168,6 +175,10 @@ local function index(tab)
 	end
 end
 
+local function basename(s)
+	return string.gsub(s, "(.*[/\\])(.*)", "%2")
+end
+
 ----------------
 -- FONTS
 ----------------
@@ -240,26 +251,26 @@ end)
 
 -- Sending a notification when specified events occur but suppress on `periodic_save()`:
 local resurrect_event_listeners = {
-	"resurrect.decrypt.finished",
-	"resurrect.delete_state.finished",
-	"resurrect.fuzzy_load.start",
-	"resurrect.load_state.start",
+	"resurrect.error",
+	"resurrect.file_io.decrypt.finished",
+	"resurrect.fuzzy_loader.fuzzy_load.start",
+	"resurrect.state_manager.delete_state.finished",
+	"resurrect.state_manager.load_state.start",
+	"resurrect.state_manager.save_state.finished",
 	"resurrect.tab_state.restore_tab.start",
 	"resurrect.window_state.restore_window.start",
 	"resurrect.workspace_state.restore_workspace.start",
-	"resurrect.error",
-	"resurrect.save_state.finished",
 }
 
 local is_periodic_save = false
 wezterm.on("resurrect.periodic_save", function()
 	is_periodic_save = true
-	resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
+	-- resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 end)
 
 for _, event in ipairs(resurrect_event_listeners) do
 	wezterm.on(event, function(...)
-		if event == "resurrect.save_state.finished" and is_periodic_save then
+		if event == "resurrect.state_manager.save_state.finished" and is_periodic_save then
 			is_periodic_save = false
 			return
 		end
@@ -269,6 +280,9 @@ for _, event in ipairs(resurrect_event_listeners) do
 			msg = msg .. " " .. tostring(v)
 		end
 		wezterm.gui.gui_windows()[1]:toast_notification("Wezterm - resurrect", msg, nil, 4000)
+		if event == "resurrect.error" then
+			wezterm.log_error("ERROR!")
+		end
 	end)
 end
 
@@ -353,11 +367,17 @@ local standard_keys = {
 -- SMART WORKSPACE and RESURRECT
 --------------------------------
 
+local resurrect_opts = {
+	is_fuzzy = true,
+	show_state_with_date = true,
+	date_format = "%d-%b-%Y %H:%M",
+}
+
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
 
-resurrect.change_state_save_dir(STATE .. "/wezterm/resurrect")
+resurrect.state_manager.change_state_save_dir(STATE .. "/wezterm/resurrect/")
 
-resurrect.periodic_save({
+resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
 	save_workspace = true,
 	save_window = true,
@@ -365,57 +385,62 @@ resurrect.periodic_save({
 })
 
 -- Resurrect set encryption
-resurrect.set_encryption({
+resurrect.state_manager.set_encryption({
 	enable = true,
 	method = "/usr/local/bin/rage",
 	private_key = HOME .. "/.secret/rage-wezterm.txt",
 	public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
 })
 
-wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
-	local gui_win = window:gui_window()
-	local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-	gui_win:set_right_status(wezterm.format({
+wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, path, label)
+	wezterm.log_info(window)
+
+	window:gui_window():set_right_status(wezterm.format({
 		{ Foreground = { Color = "green" } },
-		{ Text = base_path .. "  " },
+		{ Text = basename(path) .. "  " },
 	}))
+	-- local gui_win = window:gui_window()
+	-- local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
+	-- gui_win:set_right_status(wezterm.format({
+	-- 	{ Foreground = { Color = "green" } },
+	-- 	{ Text = base_path .. "  " },
+	-- }))
 end)
 
-wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, workspace)
-	local gui_win = window:gui_window()
-	local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-	gui_win:set_right_status(wezterm.format({
+wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, workspace, label)
+	window:gui_window():set_right_status(wezterm.format({
 		{ Foreground = { Color = "green" } },
-		{ Text = base_path .. "  " },
+		{ Text = "󱂬 : " .. label },
 	}))
+
+	local workspace_state = resurrect.workspace_state
+
+	workspace_state.restore_workspace(resurrect.state_manager.load_state(label, "workspace"), {
+		window = window,
+		relative = true,
+		restore_text = true,
+		resize_window = false,
+		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+	})
 end)
 
 -- Saves the state whenever I select a workspace
 wezterm.on("smart_workspace_switcher.workspace_switcher.selected", function(window, path, label)
+	wezterm.log_info(window)
 	local workspace_state = resurrect.workspace_state
-	resurrect.save_state(workspace_state.get_workspace_state())
+	resurrect.state_manager.save_state(workspace_state.get_workspace_state())
+	resurrect.state_manager.write_current_state(label, "workspace")
 end)
 
--- Write the current state when it has been selected
-wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace, label)
-	resurrect.write_current_state(workspace, "workspace")
+wezterm.on("smart_workspace_switcher.workspace_switcher.start", function(window, _)
+	wezterm.log_info(window)
 end)
-
--- Load the state whenever I create a new workspace
-wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, path, label)
-	local workspace_state = resurrect.workspace_state
-
-	workspace_state.restore_workspace(resurrect.load_state(label, "workspace"), {
-		window = window,
-		relative = true,
-		restore_text = true,
-		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
-	})
-	resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
+wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window, _)
+	wezterm.log_info(window)
 end)
 
 -- resurrect the last closed workspace
-wezterm.on("gui-startup", resurrect.resurrect_on_gui_startup)
+-- wezterm.on("gui-startup", resurrect.resurrect_on_gui_startup)
 
 local extended_keys = {
 	-- SMART_WORKSPACE_SWITCHER
@@ -462,7 +487,7 @@ local extended_keys = {
 		key = "w",
 		action = wezterm.action_callback(function(win, pane)
 			local workspace_state = resurrect.workspace_state
-			resurrect.save_state(workspace_state.get_workspace_state())
+			resurrect.state_manager.save_state(workspace_state.get_workspace_state())
 			resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 		end),
 	},
@@ -478,9 +503,9 @@ local extended_keys = {
 		key = "s",
 		action = wezterm.action_callback(function(win, pane)
 			local workspace_state = resurrect.workspace_state
-			resurrect.save_state(workspace_state.get_workspace_state())
+			resurrect.state_manager.save_state(workspace_state.get_workspace_state())
 			resurrect.window_state.save_window_action()
-			resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
+			resurrect.state_manager.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 		end),
 	},
 
@@ -489,7 +514,8 @@ local extended_keys = {
 		mods = "ALT",
 		key = "r",
 		action = wezterm.action_callback(function(win, pane)
-			resurrect.fuzzy_load(win, pane, function(id)
+			resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
+				print(label)
 				local type = string.match(id, "^([^/]+)") -- match before '/'
 				id = string.match(id, "([^/]+)$") -- match after '/'
 				id = string.match(id, "(.+)%..+$") -- remove file extension
@@ -499,24 +525,16 @@ local extended_keys = {
 					on_pane_restore = resurrect.tab_state.default_on_pane_restore,
 				}
 				if type == "workspace" then
-					local state = resurrect.load_state(id, "workspace")
+					local state = resurrect.state_manager.load_state(id, "workspace")
 					resurrect.workspace_state.restore_workspace(state, opts)
-					resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 				elseif type == "window" then
-					local state = resurrect.load_state(id, "window")
+					local state = resurrect.state_manager .. load_state(id, "window")
 					resurrect.window_state.restore_window(pane:window(), state, opts)
 				elseif type == "tab" then
-					local state = resurrect.load_state(id, "tab")
+					local state = resurrect.sate_manager.load_state(id, "tab")
 					resurrect.tab_state.restore_tab(pane:tab(), state, opts)
 				end
-			end, {
-				title = "Restore State",
-				description = "Select State to Restore and press Enter = accept, Esc = cancel, / = filter",
-				fuzzy_description = "Search State to Restore: ",
-				is_fuzzy = true,
-				show_state_with_date = true,
-				date_format = "%d-%b-%Y %H:%M",
-			})
+			end, resurrect_opts)
 		end),
 	},
 	-- Delete a saved state
@@ -524,16 +542,9 @@ local extended_keys = {
 		mods = "ALT",
 		key = "d",
 		action = wezterm.action_callback(function(win, pane)
-			resurrect.fuzzy_load(win, pane, function(id)
-				resurrect.delete_state(id)
-			end, {
-				title = "Delete State",
-				description = "Select State to Delete and press Enter = accept, Esc = cancel, / = filter",
-				fuzzy_description = "Search State to Delete: ",
-				is_fuzzy = true,
-				show_state_with_date = true,
-				date_format = "%d-%b-%Y %H:%M",
-			})
+			resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id)
+				resurrect.state_manager.delete_state(id)
+			end, resurrect_opts)
 		end),
 	},
 }
