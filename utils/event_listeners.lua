@@ -7,6 +7,67 @@ local function basename(s)
 end
 
 function M.setup(resurrect, workspace_switcher, tabline)
+	-------------------
+	-- EVENT RESPONDERS
+	-------------------
+
+	-- resurrect the last closed workspace
+	wezterm.on("gui-startup", function()
+		wezterm.log_info("gui-startup:", "resurrect starting")
+		resurrect.state_manager.resurrect_on_gui_startup()
+		wezterm.log_info("gui-startup:", "resurrect ended")
+	end)
+
+	-- Saves the state upon workspace selection
+	wezterm.on("smart_workspace_switcher.workspace_switcher.selected", function(window, path, label)
+		wezterm.log_info(window)
+		local workspace_state = resurrect.workspace_state
+		resurrect.state_manager.save_state(workspace_state.get_workspace_state())
+	end)
+
+	-- Saves the state after workspace switching
+	wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, path, label)
+		wezterm.log_info(window)
+
+		window:gui_window():set_right_status(wezterm.format({
+			{ Foreground = { Color = "green" } },
+			{ Text = basename(path) .. "  " },
+		}))
+		-- local gui_win = window:gui_window()
+		-- local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
+		-- gui_win:set_right_status(wezterm.format({
+		-- 	{ Foreground = { Color = "green" } },
+		-- 	{ Text = base_path .. "  " },
+		-- }))
+		resurrect.state_manager.write_current_state(label, "workspace")
+	end)
+
+	--
+	wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, workspace, label)
+		window:gui_window():set_right_status(wezterm.format({
+			{ Foreground = { Color = "green" } },
+			{ Text = "󱂬 : " .. label },
+		}))
+
+		local workspace_state = resurrect.workspace_state
+
+		workspace_state.restore_workspace(resurrect.state_manager.load_state(label, "workspace"), {
+			window = window,
+			relative = true,
+			restore_text = true,
+			resize_window = false,
+			on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+		})
+	end)
+
+	wezterm.on("smart_workspace_switcher.workspace_switcher.start", function(window, _)
+		wezterm.log_info("smart_workspace_switcher.workspace_switcher.start:", window)
+	end)
+
+	wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window, _)
+		wezterm.log_info("smart_workspace_switcher.workspace_switcher.canceled:", window)
+	end)
+
 	------------------------------------
 	-- EVENT LISTENERS FOR NOTIFICATIONS
 	------------------------------------
@@ -52,60 +113,6 @@ function M.setup(resurrect, workspace_switcher, tabline)
 			end
 		end)
 	end
-
-	-------------------
-	-- EVENT RESPONDERS
-	-------------------
-
-	wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, path, label)
-		wezterm.log_info(window)
-
-		window:gui_window():set_right_status(wezterm.format({
-			{ Foreground = { Color = "green" } },
-			{ Text = basename(path) .. "  " },
-		}))
-		-- local gui_win = window:gui_window()
-		-- local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-		-- gui_win:set_right_status(wezterm.format({
-		-- 	{ Foreground = { Color = "green" } },
-		-- 	{ Text = base_path .. "  " },
-		-- }))
-		resurrect.state_manager.write_current_state(label, "workspace")
-	end)
-
-	wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, workspace, label)
-		window:gui_window():set_right_status(wezterm.format({
-			{ Foreground = { Color = "green" } },
-			{ Text = "󱂬 : " .. label },
-		}))
-
-		local workspace_state = resurrect.workspace_state
-
-		workspace_state.restore_workspace(resurrect.state_manager.load_state(label, "workspace"), {
-			window = window,
-			relative = true,
-			restore_text = true,
-			resize_window = false,
-			on_pane_restore = resurrect.tab_state.default_on_pane_restore,
-		})
-	end)
-
-	-- Saves the state whenever I select a workspace
-	wezterm.on("smart_workspace_switcher.workspace_switcher.selected", function(window, path, label)
-		wezterm.log_info(window)
-		local workspace_state = resurrect.workspace_state
-		resurrect.state_manager.save_state(workspace_state.get_workspace_state())
-	end)
-
-	wezterm.on("smart_workspace_switcher.workspace_switcher.start", function(window, _)
-		wezterm.log_info(window)
-	end)
-	wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window, _)
-		wezterm.log_info(window)
-	end)
-
-	-- resurrect the last closed workspace
-	wezterm.on("gui-startup", resurrect.state_manager.resurrect_on_gui_startup)
 end
 
 return M
