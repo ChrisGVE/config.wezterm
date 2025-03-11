@@ -30,8 +30,6 @@ end
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-local color = require("utils.color")
-local glyph = require("utils.glyph")
 local constants = require("utils.constants")
 
 -- Selecting the color scheme
