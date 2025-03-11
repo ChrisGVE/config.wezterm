@@ -4,7 +4,6 @@
 --
 -- Pull in the wezterm API
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
-local mux = wezterm.mux
 
 local is_mac = (wezterm.target_triple == "x86_64-apple-darwin" or wezterm.target_triple == "aarch64-apple-darwin")
 
@@ -13,14 +12,22 @@ wezterm.plugin.update_all()
 
 -- Install plugins
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
+
 local resurrect
 if is_mac then
-	resurrect = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/resurrects.wezterm")
+	resurrect = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/resurrect.wezterm")
 else
-	resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrects.wezterm")
+	resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
 end
+
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
-local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
+local tabline
+if is_mac then
+	tabline = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/tabline.wez")
+else
+	tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+end
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -39,24 +46,13 @@ config.set_environment_variables = {
 -- Enable kitty's image protocol
 config.enable_kitty_graphics = true
 
+config.scrollback_lines = 5000
+
 ------------
 -- CONSTANTS
 ------------
 
 local nerdfonts = wezterm.nerdfonts
-
-local HARD_LEFT_ARROW = nerdfonts.pl_left_hard_divider
-local SOFT_LEFT_ARROW = nerdfonts.pl_left_soft_divider
-local HARD_RIGHT_ARROW = nerdfonts.pl_right_hard_divider
-local SOFT_RIGHT_ARROW = nerdfonts.pl_right_soft_divider
-
-local LOWER_LEFT_WEDGE = nerdfonts.ple_lower_left_triangle
-local UPPER_LEFT_WEDGE = nerdfonts.ple_upper_left_triangle
-local LOWER_RIGHT_WEDGE = nerdfonts.ple_lower_right_triangle
-local UPPER_RIGHT_WEDGE = nerdfonts.ple_upper_right_triangle
-
-local BACKSLASH_SEPARATOR = nerdfonts.ple_backslash_separator
-local FORWARDSLASH_SEPARATOR = nerdfonts.ple_forwardslash_separator
 
 local HOME = os.getenv("HOME")
 local STATE = os.getenv("XDG_STATE_HOME") or HOME .. "/.local/state"
@@ -64,48 +60,13 @@ local STATE = os.getenv("XDG_STATE_HOME") or HOME .. "/.local/state"
 local TAB_TEXT_SIZE = 20
 local TAB_MAX_SIZE = 28
 local TAB_UPDATE_INTERVAL = 250 -- ms
-local CPU_LOAD_INTERVAL = 2 -- s
 
-local CATPPUCCIN_MOCHA_ROSEWATER = "#f5e0dc"
-local CATPPUCCIN_MOCHA_FLAMINGO = "#f2cdcd"
-local CATPPUCCIN_MOCHA_PINK = "#f5c2e7"
-local CATPPUCCIN_MOCHA_MAUVE = "#cba6f7"
-local CATPPUCCIN_MOCHA_RED = "#f38ba8"
-local CATPPUCCIN_MOCHA_MAROON = "#eba0ac"
-local CATPPUCCIN_MOCHA_PEACH = "#fab387"
-local CATPPUCCIN_MOCHA_YELLOW = "#f9e2af"
-local CATPPUCCIN_MOCHA_GREEN = "#a6e3a1"
-local CATPPUCCIN_MOCHA_TEAL = "#94e2d5"
-local CATPPUCCIN_MOCHA_SKY = "#89dceb"
-local CATPPUCCIN_MOCHA_SAPPHIRE = "#74c7ec"
-local CATPPUCCIN_MOCHA_BLUE = "#89b4fa"
-local CATPPUCCIN_MOCHA_LAVENDER = "#b4befe"
-local CATPPUCCIN_MOCHA_TEXT = "#c0caf5"
-local CATPPUCCIN_MOCHA_SUBTEXT_1 = "#a9b1d6"
-local CATPPUCCIN_MOCHA_SUBTEXT_0 = "#a5adc8"
-local CATPPUCCIN_MOCHA_OVERLAY_2 = "#9399b2"
-local CATPPUCCIN_MOCHA_OVERLAY_1 = "#7f849c"
-local CATPPUCCIN_MOCHA_OVERLAY_0 = "#6c7086"
-local CATPPUCCIN_MOCHA_SURFACE_1 = "#45455a"
-local CATPPUCCIN_MOCHA_SURFACE_0 = "#313244"
-local CATPPUCCIN_MOCHA_BASE = "#1e1e2e"
-local CATPPUCCIN_MOCHA_MANTLE = "#181825"
-local CATPPUCCIN_MOCHA_CRUST = "#11111b"
+local color = require("utils.color")
+local glyph = require("utils.glyph")
 
 -- Selecting the color scheme
 config.color_scheme = "Catppuccin Mocha"
 local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
-
-local process_custom_icons = {
-	["brew"] = " ",
-	["curl"] = nerdfonts.md_arrow_down_box,
-	["gitui"] = nerdfonts.dev_github_badge,
-	["kubectl"] = nerdfonts.md_kubernetes,
-	["kuberlr"] = nerdfonts.md_kubernetes,
-	["python"] = { nerdfonts.md_language_python, color = { fg = CATPPUCCIN_MOCHA_BLUE } },
-	["taskwarrior"] = { " ", color = { fg = CATPPUCCIN_MOCHA_PEACH } },
-	["tmux"] = nerdfonts.cod_terminal_tmux,
-}
 
 config.default_workspace = "~"
 
@@ -146,33 +107,6 @@ local function deepMerge(t1, t2)
 	end
 
 	return merged
-end
-
--- function returns an icon for zoomed panes
----@param tab table
----@param opts table
----@return string
-local function zoomed(tab, opts)
-	if tab == nil then
-		return ""
-	end
-	for _, pane in ipairs(tab.panes) do
-		if pane.is_zoomed then
-			return " "
-		end
-	end
-	return ""
-end
-
--- function returns the index of the tab
----@param tab table
----@return string
-local function index(tab)
-	if tab ~= nil then
-		return tab.tab_index + 1
-	else
-		return ""
-	end
 end
 
 local function basename(s)
@@ -281,7 +215,7 @@ for _, event in ipairs(resurrect_event_listeners) do
 		end
 		wezterm.gui.gui_windows()[1]:toast_notification("Wezterm - resurrect", msg, nil, 4000)
 		if event == "resurrect.error" then
-			wezterm.log_error("ERROR!")
+			wezterm.log_error("ERROR!", msg)
 		end
 	end)
 end
@@ -367,20 +301,16 @@ local standard_keys = {
 -- SMART WORKSPACE and RESURRECT
 --------------------------------
 
-local resurrect_opts = {
-	is_fuzzy = true,
-	show_state_with_date = true,
-	date_format = "%d-%b-%Y %H:%M",
-}
-
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
+
+resurrect.state_manager.set_max_nlines(config.scrollback_lines)
 
 resurrect.state_manager.change_state_save_dir(STATE .. "/wezterm/resurrect/")
 
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
-	save_workspace = true,
-	save_window = true,
+	save_workspaces = true,
+	save_windows = true,
 	save_tabs = true,
 })
 
@@ -440,7 +370,7 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(wind
 end)
 
 -- resurrect the last closed workspace
--- wezterm.on("gui-startup", resurrect.resurrect_on_gui_startup)
+wezterm.on("gui-startup", resurrect.state_manager.resurrect_on_gui_startup)
 
 local extended_keys = {
 	-- SMART_WORKSPACE_SWITCHER
@@ -488,7 +418,7 @@ local extended_keys = {
 		action = wezterm.action_callback(function(win, pane)
 			local workspace_state = resurrect.workspace_state
 			resurrect.state_manager.save_state(workspace_state.get_workspace_state())
-			resurrect.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
+			resurrect.state_manager.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 		end),
 	},
 
@@ -528,23 +458,38 @@ local extended_keys = {
 					local state = resurrect.state_manager.load_state(id, "workspace")
 					resurrect.workspace_state.restore_workspace(state, opts)
 				elseif type == "window" then
+					opts.close_open_tabs = true
+					opts.window = pane:window()
 					local state = resurrect.state_manager .. load_state(id, "window")
 					resurrect.window_state.restore_window(pane:window(), state, opts)
 				elseif type == "tab" then
+					opts.spawn_in_workspace = true
 					local state = resurrect.sate_manager.load_state(id, "tab")
 					resurrect.tab_state.restore_tab(pane:tab(), state, opts)
 				end
-			end, resurrect_opts)
+			end, {
+				is_fuzzy = true,
+				show_state_with_date = true,
+				date_format = "%d-%b-%Y %H:%M",
+			})
 		end),
 	},
 	-- Delete a saved state
 	{
 		mods = "ALT",
+
 		key = "d",
 		action = wezterm.action_callback(function(win, pane)
 			resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id)
 				resurrect.state_manager.delete_state(id)
-			end, resurrect_opts)
+			end, {
+				title = "Delete State",
+				description = "Select State to Delete and press Enter = accept, Esc = cancel, / = filter",
+				fuzzy_description = "Search State to Delete: ",
+				is_fuzzy = true,
+				show_state_with_date = true,
+				date_format = "%d-%b-%Y %H:%M",
+			})
 		end),
 	},
 }
@@ -583,162 +528,14 @@ config.keys = deepMerge(standard_keys, extended_keys)
 ----------------
 
 -- Actual setup of the tab_line
-tabline.setup({
-	options = {
+local tabline_setup = require("tab.tabline_setup")
+tabline_setup.scheme = scheme
+tabline_setup.default_workspace = config.default_workspace
 
-		-- THEME
-
-		color_overrides = {
-			tab = {
-				active = {
-					fg = scheme.ansi[5],
-					-- bg = scheme.tab_bar.active_tab.bg_color,
-				},
-				inactive = {
-					fg = scheme.tab_bar.inactive_tab.fg_color,
-					bg = scheme.tab_bar.inactive_tab.bg_color,
-				},
-				inactive_hover = {
-					fg = scheme.tab_bar.inactive_tab_hover.fg_color,
-					bg = scheme.tab_bar.inactive_tab_hover.bg_color,
-				},
-			},
-			normal_mode = {
-				a = { bg = CATPPUCCIN_MOCHA_LAVENDER },
-				b = { fg = CATPPUCCIN_MOCHA_LAVENDER },
-				c = { fg = CATPPUCCIN_MOCHA_LAVENDER },
-			},
-		},
-		tab_separators = {
-			left = "",
-			right = "",
-		},
-	},
-
-	-- SECTIONS DEFINITIONS
-
-	sections = {
-
-		-- LEFT SECTION
-
-		tabline_a = {
-			{
-				"mode",
-				icons_enabled = true,
-				fmt = function(str)
-					return str:sub(1, 1)
-				end,
-			},
-		},
-		tabline_b = {
-			cond = function()
-				return mux.get_active_workspace() ~= config.default_workspace
-			end,
-			function()
-				local workspace = mux.get_active_workspace()
-				if workspace == config.default_workspace then
-					return ""
-				else
-					return nerdfonts.cod_terminal_tmux .. " " .. string.match(workspace, "[^/\\]+$")
-				end
-			end,
-			padding = 0,
-		},
-		tabline_c = { cond = false },
-
-		-- ACTIVE TAB
-
-		tab_active = {
-			{ Attribute = { Intensity = "Bold" } },
-			{ Foreground = { Color = scheme.selection_fg } },
-			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
-			LOWER_RIGHT_WEDGE,
-			{ Foreground = { Color = scheme.tab_bar.active_tab.fg_color } },
-			{ Background = { Color = scheme.selection_fg } },
-			index,
-			{ Foreground = { Color = scheme.selection_fg } },
-			{ Background = { Color = scheme.tab_bar.inactive_tab_edge } },
-			UPPER_LEFT_WEDGE,
-			"ResetAttributes",
-			{ Attribute = { Intensity = "Bold" } },
-			{
-				process_to_icon = process_custom_icons,
-				"process",
-			},
-			" ",
-			zoomed,
-			{ Foreground = { Color = scheme.tab_bar.inactive_tab_edge } },
-			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
-			UPPER_LEFT_WEDGE,
-			" ",
-		},
-
-		-- INACTIVE TAB
-
-		tab_inactive = {
-			{ Attribute = { Italic = true } },
-			{ Foreground = { Color = scheme.selection_bg } },
-			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
-			LOWER_RIGHT_WEDGE,
-			{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
-			{ Background = { Color = scheme.selection_bg } },
-			index,
-			{ Foreground = { Color = scheme.selection_bg } },
-			{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
-			UPPER_LEFT_WEDGE,
-			"ResetAttributes",
-			{ Attribute = { Italic = true } },
-			{
-				process_to_icon = process_custom_icons,
-				"process",
-			},
-			"output",
-		},
-
-		-- RIGHT SECTIONS
-
-		-- Removed this section to gain some space
-		tabline_x = { "cpu", throttle = CPU_LOAD_INTERVAL },
-		-- tabline_x = {},
-		tabline_y = {
-			{
-				"datetime",
-				-- style = "%a, %d-%b-%y %H:%M",
-				style = " %d-%b %H:%M",
-				hour_to_icon = {
-					["00"] = nerdfonts.md_clock_time_twelve_outline,
-					["01"] = nerdfonts.md_clock_time_one_outline,
-					["02"] = nerdfonts.md_clock_time_two_outline,
-					["03"] = nerdfonts.md_clock_time_three_outline,
-					["04"] = nerdfonts.md_clock_time_four_outline,
-					["05"] = nerdfonts.md_clock_time_five_outline,
-					["06"] = nerdfonts.md_clock_time_six_outline,
-					["07"] = nerdfonts.md_clock_time_seven_outline,
-					["08"] = nerdfonts.md_clock_time_eight_outline,
-					["09"] = nerdfonts.md_clock_time_nine_outline,
-					["10"] = nerdfonts.md_clock_time_ten_outline,
-					["11"] = nerdfonts.md_clock_time_eleven_outline,
-					["12"] = nerdfonts.md_clock_time_twelve,
-					["13"] = nerdfonts.md_clock_time_one,
-					["14"] = nerdfonts.md_clock_time_two,
-					["15"] = nerdfonts.md_clock_time_three,
-					["16"] = nerdfonts.md_clock_time_four,
-					["17"] = nerdfonts.md_clock_time_five,
-					["18"] = nerdfonts.md_clock_time_six,
-					["19"] = nerdfonts.md_clock_time_seven,
-					["20"] = nerdfonts.md_clock_time_eight,
-					["21"] = nerdfonts.md_clock_time_nine,
-					["22"] = nerdfonts.md_clock_time_ten,
-					["23"] = nerdfonts.md_clock_time_eleven,
-				},
-			},
-		},
-		tabline_z = { "hostname" },
-	},
-	extensions = { "resurrect", "smart_workspace_switcher" },
-})
+tabline.setup(tabline_setup.get_setup())
 
 tabline.apply_to_config(config)
+
 config.tab_bar_at_bottom = false
 config.status_update_interval = TAB_UPDATE_INTERVAL
 
@@ -757,7 +554,7 @@ config.colors = {
 	tab_bar = {
 		inactive_tab_edge = scheme.tab_bar.inactive_tab.bg_color,
 		active_tab = {
-			fg_color = CATPPUCCIN_MOCHA_BLUE,
+			fg_color = color.CATPPUCCIN_MOCHA_BLUE,
 			bg_color = scheme.tab_bar.inactive_tab_edge,
 			italic = false,
 		},
@@ -768,11 +565,11 @@ config.colors = {
 		},
 		new_tab = {
 			bg_color = scheme.tab_bar.inactive_tab_edge,
-			fg_color = CATPPUCCIN_MOCHA_TEXT,
+			fg_color = color.CATPPUCCIN_MOCHA_TEXT,
 		},
 		new_tab_hover = {
 			bg_color = scheme.tab_bar.inactive_tab.bg_color,
-			fg_color = CATPPUCCIN_MOCHA_RED,
+			fg_color = color.CATPPUCCIN_MOCHA_RED,
 		},
 	},
 }
