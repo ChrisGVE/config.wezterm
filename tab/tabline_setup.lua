@@ -1,14 +1,12 @@
-local M = {}
-
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
-local mux = wezterm.mux
-local nerdfonts = wezterm.nerdfonts
-
-M.scheme = {}
-M.default_workspace = ""
-
 local color = require("utils.color")
 local glyph = require("utils.glyph")
+local constants = require("utils.constants")
+
+local M = {}
+
+local mux = wezterm.mux
+local nerdfonts = wezterm.nerdfonts
 
 local process_custom_icons = {
 	["brew"] = " ",
@@ -20,8 +18,6 @@ local process_custom_icons = {
 	["taskwarrior"] = { " ", color = { fg = color.CATPPUCCIN_MOCHA_PEACH } },
 	["tmux"] = nerdfonts.cod_terminal_tmux,
 }
-
-local CPU_LOAD_INTERVAL = 2 -- s
 
 -- function returns an icon for zoomed panes
 ---@param tab table
@@ -50,8 +46,8 @@ local function index(tab)
 	end
 end
 
-function M.get_setup()
-	return {
+function M.setup(config, tabline, scheme)
+	tabline.setup({
 		options = {
 
 			-- THEME
@@ -59,16 +55,16 @@ function M.get_setup()
 			color_overrides = {
 				tab = {
 					active = {
-						fg = M.scheme.ansi[5],
+						fg = scheme.ansi[5],
 						-- bg = scheme.tab_bar.active_tab.bg_color,
 					},
 					inactive = {
-						fg = M.scheme.tab_bar.inactive_tab.fg_color,
-						bg = M.scheme.tab_bar.inactive_tab.bg_color,
+						fg = scheme.tab_bar.inactive_tab.fg_color,
+						bg = scheme.tab_bar.inactive_tab.bg_color,
 					},
 					inactive_hover = {
-						fg = M.scheme.tab_bar.inactive_tab_hover.fg_color,
-						bg = M.scheme.tab_bar.inactive_tab_hover.bg_color,
+						fg = scheme.tab_bar.inactive_tab_hover.fg_color,
+						bg = scheme.tab_bar.inactive_tab_hover.bg_color,
 					},
 				},
 				normal_mode = {
@@ -100,11 +96,11 @@ function M.get_setup()
 			},
 			tabline_b = {
 				cond = function()
-					return mux.get_active_workspace() ~= M.default_workspace
+					return mux.get_active_workspace() ~= constants.DEFAULT_WORKSPACE
 				end,
 				function()
 					local workspace = mux.get_active_workspace()
-					if workspace == M.default_workspace then
+					if workspace == constants.DEFAULT_WORKSPACE then
 						return ""
 					else
 						return nerdfonts.cod_terminal_tmux .. " " .. string.match(workspace, "[^/\\]+$")
@@ -118,14 +114,14 @@ function M.get_setup()
 
 			tab_active = {
 				{ Attribute = { Intensity = "Bold" } },
-				{ Foreground = { Color = M.scheme.selection_fg } },
-				{ Background = { Color = M.scheme.tab_bar.inactive_tab.bg_color } },
+				{ Foreground = { Color = scheme.selection_fg } },
+				{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 				glyph.LOWER_RIGHT_WEDGE,
-				{ Foreground = { Color = M.scheme.tab_bar.active_tab.fg_color } },
-				{ Background = { Color = M.scheme.selection_fg } },
+				{ Foreground = { Color = scheme.tab_bar.active_tab.fg_color } },
+				{ Background = { Color = scheme.selection_fg } },
 				index,
-				{ Foreground = { Color = M.scheme.selection_fg } },
-				{ Background = { Color = M.scheme.tab_bar.inactive_tab_edge } },
+				{ Foreground = { Color = scheme.selection_fg } },
+				{ Background = { Color = scheme.tab_bar.inactive_tab_edge } },
 				glyph.UPPER_LEFT_WEDGE,
 				"ResetAttributes",
 				{ Attribute = { Intensity = "Bold" } },
@@ -135,8 +131,8 @@ function M.get_setup()
 				},
 				" ",
 				zoomed,
-				{ Foreground = { Color = M.scheme.tab_bar.inactive_tab_edge } },
-				{ Background = { Color = M.scheme.tab_bar.inactive_tab.bg_color } },
+				{ Foreground = { Color = scheme.tab_bar.inactive_tab_edge } },
+				{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 				glyph.UPPER_LEFT_WEDGE,
 				" ",
 			},
@@ -145,14 +141,14 @@ function M.get_setup()
 
 			tab_inactive = {
 				{ Attribute = { Italic = true } },
-				{ Foreground = { Color = M.scheme.selection_bg } },
-				{ Background = { Color = M.scheme.tab_bar.inactive_tab.bg_color } },
+				{ Foreground = { Color = scheme.selection_bg } },
+				{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 				glyph.LOWER_RIGHT_WEDGE,
-				{ Foreground = { Color = M.scheme.tab_bar.inactive_tab.fg_color } },
-				{ Background = { Color = M.scheme.selection_bg } },
+				{ Foreground = { Color = scheme.tab_bar.inactive_tab.fg_color } },
+				{ Background = { Color = scheme.selection_bg } },
 				index,
-				{ Foreground = { Color = M.scheme.selection_bg } },
-				{ Background = { Color = M.scheme.tab_bar.inactive_tab.bg_color } },
+				{ Foreground = { Color = scheme.selection_bg } },
+				{ Background = { Color = scheme.tab_bar.inactive_tab.bg_color } },
 				glyph.UPPER_LEFT_WEDGE,
 				"ResetAttributes",
 				{ Attribute = { Italic = true } },
@@ -166,7 +162,7 @@ function M.get_setup()
 			-- RIGHT SECTIONS
 
 			-- Removed this section to gain some space
-			tabline_x = { "cpu", throttle = CPU_LOAD_INTERVAL },
+			tabline_x = { "cpu", throttle = constants.CPU_LOAD_INTERVAL },
 			-- tabline_x = {},
 			tabline_y = {
 				{
@@ -204,6 +200,47 @@ function M.get_setup()
 			tabline_z = { "hostname" },
 		},
 		extensions = { "resurrect", "smart_workspace_switcher" },
+	})
+
+	tabline.apply_to_config(config)
+
+	config.tab_bar_at_bottom = false
+	config.status_update_interval = constants.TAB_UPDATE_INTERVAL
+
+	config.tab_max_width = constants.TAB_MAX_SIZE
+	config.show_new_tab_button_in_tab_bar = true
+	config.hide_tab_bar_if_only_one_tab = true
+	config.use_fancy_tab_bar = true
+
+	config.window_frame = {
+		font = wezterm.font({ family = "Operator Mono", weight = "Book" }),
+		font_size = 14,
+		active_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
+		inactive_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
+	}
+
+	config.colors = {
+		tab_bar = {
+			inactive_tab_edge = scheme.tab_bar.inactive_tab.bg_color,
+			active_tab = {
+				fg_color = color.CATPPUCCIN_MOCHA_BLUE,
+				bg_color = scheme.tab_bar.inactive_tab_edge,
+				italic = false,
+			},
+			inactive_tab = {
+				fg_color = scheme.foreground,
+				bg_color = scheme.tab_bar.inactive_tab.bg_color,
+				italic = true,
+			},
+			new_tab = {
+				bg_color = scheme.tab_bar.inactive_tab_edge,
+				fg_color = color.CATPPUCCIN_MOCHA_TEXT,
+			},
+			new_tab_hover = {
+				bg_color = scheme.tab_bar.inactive_tab.bg_color,
+				fg_color = color.CATPPUCCIN_MOCHA_RED,
+			},
+		},
 	}
 end
 
