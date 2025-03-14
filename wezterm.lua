@@ -20,12 +20,7 @@ end
 
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 
-local tabline
-if is_mac then
-	tabline = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/tabline.wez")
-else
-	tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
-end
+local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()

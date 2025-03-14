@@ -43,13 +43,15 @@ function M.setup(scheme, resurrect, workspace_switcher, tabline)
 
 		-- RESURRECT
 
-		-- Save workspace
+		-- Save workspace, window, and tab
 		{
 			mods = "ALT",
 			key = "w",
 			action = wezterm.action_callback(function(win, pane)
 				local workspace_state = resurrect.workspace_state
 				resurrect.state_manager.save_state(workspace_state.get_workspace_state())
+				resurrect.window_state.save_window_action()
+				resurrect.tab_state.save_tab_action()
 				resurrect.state_manager.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
 			end),
 		},
