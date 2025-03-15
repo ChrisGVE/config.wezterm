@@ -12,11 +12,11 @@ wezterm.plugin.update_all()
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
 
 local resurrect
-if is_mac then
-	resurrect = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/resurrect.wezterm")
-else
-	resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
-end
+-- if is_mac then
+-- 	resurrect = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/resurrect.wezterm")
+-- else
+resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
+-- end
 
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 
@@ -58,13 +58,15 @@ resurrect.state_manager.periodic_save({
 	save_tabs = true,
 })
 
--- Resurrect set encryption
-resurrect.state_manager.set_encryption({
-	enable = true,
-	method = "/usr/local/bin/rage",
-	private_key = constants.HOME .. "/.secret/rage-wezterm.txt",
-	public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
-})
+if is_mac then
+	-- Resurrect set encryption
+	resurrect.state_manager.set_encryption({
+		enable = true,
+		method = "/usr/local/bin/rage",
+		private_key = constants.HOME .. "/.secret/rage-wezterm.txt",
+		public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
+	})
+end
 
 -------------------
 -- EVENTS
