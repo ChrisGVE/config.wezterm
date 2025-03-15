@@ -50,7 +50,7 @@ workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
 
 --- resurrect config
 resurrect.state_manager.set_max_nlines(config.scrollback_lines)
-resurrect.state_manager.change_state_save_dir(constants.STATE .. "/wezterm/resurrect/")
+-- resurrect.state_manager.change_state_save_dir(constants.STATE .. "/wezterm/resurrect/")
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
 	save_workspaces = true,
