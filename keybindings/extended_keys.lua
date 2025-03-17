@@ -102,9 +102,10 @@ function M.setup(scheme, resurrect, workspace_switcher, tabline)
 						resurrect.tab_state.restore_tab(pane:tab(), state, opts)
 					end
 				end, {
-					is_fuzzy = true,
+					is_fuzzy = false,
 					show_state_with_date = true,
 					date_format = "%d-%b-%Y %H:%M",
+					ignore_screen_width = false,
 				})
 			end),
 		},
@@ -120,9 +121,10 @@ function M.setup(scheme, resurrect, workspace_switcher, tabline)
 					title = "Delete State",
 					description = "Select State to Delete and press Enter = accept, Esc = cancel, / = filter",
 					fuzzy_description = "Search State to Delete: ",
-					is_fuzzy = true,
+					is_fuzzy = false,
 					show_state_with_date = true,
 					date_format = "%d-%b-%Y %H:%M",
+					ignore_screen_width = false,
 				})
 			end),
 		},
