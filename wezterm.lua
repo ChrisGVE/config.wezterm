@@ -58,15 +58,15 @@ resurrect.state_manager.periodic_save({
 	save_tabs = true,
 })
 
-if is_mac then
-	-- Resurrect set encryption
-	resurrect.state_manager.set_encryption({
-		enable = true,
-		method = "/usr/local/bin/rage",
-		private_key = constants.HOME .. "/.secret/rage-wezterm.txt",
-		public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
-	})
-end
+-- if is_mac then
+-- 	-- Resurrect set encryption
+-- 	resurrect.state_manager.set_encryption({
+-- 		enable = true,
+-- 		method = "/usr/local/bin/rage",
+-- 		private_key = constants.HOME .. "/.secret/rage-wezterm.txt",
+-- 		public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
+-- 	})
+-- end
 
 -------------------
 -- EVENTS
