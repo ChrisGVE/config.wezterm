@@ -3,7 +3,6 @@ local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes 
 ---------
 -- SYSTEM
 ---------
-local is_mac = (wezterm.target_triple == "x86_64-apple-darwin" or wezterm.target_triple == "aarch64-apple-darwin")
 
 -- Update the plugins
 wezterm.plugin.update_all()
@@ -11,45 +10,40 @@ wezterm.plugin.update_all()
 -- Install plugins
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
 
-local resurrect
--- if is_mac then
--- 	resurrect = wezterm.plugin.require("file:///Users/chris/dev/projects/plugins/resurrect.wezterm")
--- else
-resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
--- end
+local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
 
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
 -- This will hold the configuration.
-local config = wezterm.config_builder()
+Config = wezterm.config_builder()
 
 local constants = require("utils.constants")
 
 -- Selecting the color scheme
-config.color_scheme = "Catppuccin Mocha"
-local scheme = wezterm.color.get_builtin_schemes()[config.color_scheme]
+Config.color_scheme = "Catppuccin Mocha"
+local scheme = wezterm.color.get_builtin_schemes()[Config.color_scheme]
 
-config.default_workspace = constants.DEFAULT_WORKSPACE
+Config.default_workspace = constants.DEFAULT_WORKSPACE
 
 -- Remove confirmation when closing wezterm
-config.window_close_confirmation = "NeverPrompt"
+Config.window_close_confirmation = "NeverPrompt"
 
 -- Change the environment path
-config.set_environment_variables = {
+Config.set_environment_variables = {
 	PATH = os.getenv("PATH") .. ":/usr/local/bin",
 }
 
-config.enable_kitty_graphics = true
+Config.enable_kitty_graphics = true
 
-config.scrollback_lines = 5000
+Config.scrollback_lines = 5000
 
 --- workspace_switcher config
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
 
 --- resurrect config
-resurrect.state_manager.set_max_nlines(config.scrollback_lines)
+resurrect.state_manager.set_max_nlines(Config.scrollback_lines)
 -- resurrect.state_manager.change_state_save_dir(constants.STATE .. "/wezterm/resurrect/")
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
@@ -81,7 +75,7 @@ local helpers = require("utils.helpers")
 -- FONTS
 ----------------
 
-config.font = wezterm.font_with_fallback({
+Config.font = wezterm.font_with_fallback({
 	{
 		family = "Operator Mono SSm Lig",
 		weight = "Light",
@@ -92,25 +86,30 @@ config.font = wezterm.font_with_fallback({
 	{ family = "Hack Nerd Font Mono" },
 })
 
-config.use_cap_height_to_scale_fallback_fonts = true
-
-config.font_size = 16
+Config.use_cap_height_to_scale_fallback_fonts = true
+if constants.is_mac then
+	Config.font_size = 16
+elseif constants.is_windows then
+	Config.font_size = 16
+elseif constants.is_linux then
+	Config.font_size = 12
+end
 
 ----------------
 -- LAUNCH MENU
 ----------------
 
-config.launch_menu = require("launcher")
+Config.launch_menu = require("launcher")
 
 ---------------
 -- KEY BINDINGS
 ---------------
 
 -- Disable default keybindings
-config.disable_default_key_bindings = true
+Config.disable_default_key_bindings = true
 
 -- Define the LEADER key
-config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1500 }
+Config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1500 }
 -- to be seen if the leader key can be changed contextually
 
 -- Key configuration
@@ -119,7 +118,7 @@ local standard_keys = require("keybindings.standard_keys")
 local extended_keys = require("keybindings.extended_keys").setup(scheme, resurrect, workspace_switcher, tabline)
 
 -- finalized all the keybindings
-config.keys = helpers.deepMerge(standard_keys, extended_keys)
+Config.keys = helpers.deepMerge(standard_keys, extended_keys)
 
 -- AUGMENT COMMAND PALETTE
 -- TODO: Work on the augment command palette as the palette is currently unusable
@@ -152,13 +151,13 @@ config.keys = helpers.deepMerge(standard_keys, extended_keys)
 ----------------
 
 local tabline_setup = require("tab.tabline_setup")
-tabline_setup.setup(config, tabline, scheme)
+tabline_setup.setup(Config, tabline, scheme)
 
 ----------------
 -- PANE SETTINGS
 ----------------
 
-config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.7 }
+Config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.7 }
 
 ---------------
 -- TITLE BAR
@@ -167,13 +166,13 @@ config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.7 }
 -- TODO: work on the title bar which is very bare
 
 -- Title bar
-config.window_decorations = "RESIZE|TITLE"
+Config.window_decorations = "RESIZE|TITLE"
 
 ---------------
 -- SMART_SPLIT
 ---------------
 
-smart_splits.apply_to_config(config, {
+smart_splits.apply_to_config(Config, {
 	direction_keys = {
 		move = { "h", "j", "k", "l" },
 		resize = { "LeftArrow", "DownArrow", "UpArrow", "RightArrow" },
@@ -186,4 +185,4 @@ smart_splits.apply_to_config(config, {
 })
 
 -- and finally, return the configuration to weztermp
-return config
+return Config

@@ -46,7 +46,7 @@ local function index(tab)
 	end
 end
 
-function M.setup(config, tabline, scheme)
+function M.setup(Config, tabline, scheme)
 	tabline.setup({
 		options = {
 
@@ -202,24 +202,24 @@ function M.setup(config, tabline, scheme)
 		extensions = { "resurrect", "smart_workspace_switcher" },
 	})
 
-	tabline.apply_to_config(config)
+	tabline.apply_to_config(Config)
 
-	config.tab_bar_at_bottom = false
-	config.status_update_interval = constants.TAB_UPDATE_INTERVAL
+	Config.tab_bar_at_bottom = false
+	Config.status_update_interval = constants.TAB_UPDATE_INTERVAL
 
-	config.tab_max_width = constants.TAB_MAX_SIZE
-	config.show_new_tab_button_in_tab_bar = true
-	config.hide_tab_bar_if_only_one_tab = true
-	config.use_fancy_tab_bar = true
+	Config.tab_max_width = constants.TAB_MAX_SIZE
+	Config.show_new_tab_button_in_tab_bar = true
+	Config.hide_tab_bar_if_only_one_tab = true
+	Config.use_fancy_tab_bar = true
 
-	config.window_frame = {
+	Config.window_frame = {
 		font = wezterm.font({ family = "Operator Mono", weight = "Book" }),
 		font_size = 14,
 		active_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
 		inactive_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
 	}
 
-	config.colors = {
+	Config.colors = {
 		tab_bar = {
 			inactive_tab_edge = scheme.tab_bar.inactive_tab.bg_color,
 			active_tab = {

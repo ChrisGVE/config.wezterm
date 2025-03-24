@@ -1,4 +1,6 @@
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
+local constants = require("utils.constants")
+local helpers = require("utils.helpers")
 
 local M = {}
 
