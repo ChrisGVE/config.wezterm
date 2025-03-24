@@ -55,6 +55,7 @@ if constants.is_mac then
 elseif constants.is_linux then
 	mods = "SHIFT|CTRL"
 elseif constants.is_windows then
+	mods = "SHIFT|CTRL"
 end
 
 helpers.deepMerge(M, {
@@ -72,6 +73,7 @@ if constants.is_mac then
 elseif constants.is_linux then
 	mods = "CTRL"
 elseif constants.is_windows then
+	mods = "CTRL"
 end
 
 helpers.deepMerge(M, {
@@ -86,6 +88,7 @@ if constants.is_mac then
 elseif constants.is_linux then
 	mods = "ALT"
 elseif constants.is_windows then
+	mods = "ALT"
 end
 
 helpers.deepMerge(M, {
