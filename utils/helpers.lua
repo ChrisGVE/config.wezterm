@@ -55,4 +55,9 @@ function M.get_sections(str)
 	return sections
 end
 
+function M.notify(message)
+	local window = wezterm.gui.gui_windows()[1]
+	window:toast_notification("wezterm", message, nil, constants.NOTIFICATION_TIME)
+end
+
 return M
