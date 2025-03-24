@@ -1,3 +1,6 @@
+local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
+local constants = require("utils.constants")
+
 local M = {}
 
 ---@param t1 table
@@ -20,7 +23,7 @@ function M.deepMerge(t1, t2)
 	local merged = {}
 	for k, v in pairs(t1) do
 		if type(v) == "table" and type(t2[k]) == "table" then
-			merged[k] = deepMerge(v, t2[k])
+			merged[k] = M.deepMerge(v, t2[k])
 		else
 			merged[k] = v
 		end
@@ -38,6 +41,9 @@ end
 -- Create a cache table to store previously split results
 M.split_cache = {}
 
+-- Split a dot separated string into sections in a table
+---@param str string dot separated string
+---@return table sections array of sections from the input string
 function M.get_sections(str)
 	-- Return cached result if it exists
 	if M.split_cache[str] then
@@ -55,6 +61,8 @@ function M.get_sections(str)
 	return sections
 end
 
+-- Use the OS notification system to notify the user
+---@param message string message to display
 function M.notify(message)
 	local window = wezterm.gui.gui_windows()[1]
 	window:toast_notification("wezterm", message, nil, constants.NOTIFICATION_TIME)
