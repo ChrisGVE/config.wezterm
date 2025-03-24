@@ -35,4 +35,24 @@ function M.deepMerge(t1, t2)
 	return merged
 end
 
+-- Create a cache table to store previously split results
+M.split_cache = {}
+
+function M.get_sections(str)
+	-- Return cached result if it exists
+	if M.split_cache[str] then
+		return M.split_cache[str]
+	end
+
+	-- Split and cache the result if it's new
+	local sections = {}
+	for section in str:gmatch("([^%.]+)") do
+		table.insert(sections, section)
+	end
+
+	-- Store in cache and return
+	M.split_cache[str] = sections
+	return sections
+end
+
 return M
