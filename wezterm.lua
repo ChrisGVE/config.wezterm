@@ -76,41 +76,43 @@ local helpers = require("utils.helpers")
 -- FONTS
 ----------------
 
-Config.font = wezterm.font_with_fallback({
-	{
-		family = "Operator Mono SSm Lig",
-		weight = "Light",
-		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
-		assume_emoji_presentation = false,
-		style = "Normal",
-		stretch = "Normal",
-		freetype_load_target = "Light",
-		freetype_render_target = "Light",
-		freetype_load_flags = "DEFAULT",
-	},
-	{
-		family = "Symbols Nerd Font Mono",
-		weight = "Regular",
-		harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
-		freetype_load_target = "Light",
-		freetype_render_target = "Light",
-		freetype_load_flags = "DEFAULT",
-		stretch = "Normal",
-		style = "Normal",
-		assume_emoji_presentation = false,
-	},
-	{
-		family = "Hack Nerd Font Mono",
-		weight = "Regular",
-		harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
-		freetype_load_target = "Light",
-		freetype_render_target = "Light",
-		freetype_load_flags = "DEFAULT",
-		stretch = "Normal",
-		style = "Normal",
-		assume_emoji_presentation = false,
-	},
-})
+if not constants.is_windows then
+	Config.font = wezterm.font_with_fallback({
+		{
+			family = "Operator Mono SSm Lig",
+			weight = "Light",
+			harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
+			assume_emoji_presentation = false,
+			style = "Normal",
+			stretch = "Normal",
+			freetype_load_target = "Light",
+			freetype_render_target = "Light",
+			freetype_load_flags = "DEFAULT",
+		},
+		{
+			family = "Symbols Nerd Font Mono",
+			weight = "Regular",
+			harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
+			freetype_load_target = "Light",
+			freetype_render_target = "Light",
+			freetype_load_flags = "DEFAULT",
+			stretch = "Normal",
+			style = "Normal",
+			assume_emoji_presentation = false,
+		},
+		{
+			family = "Hack Nerd Font Mono",
+			weight = "Regular",
+			harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
+			freetype_load_target = "Light",
+			freetype_render_target = "Light",
+			freetype_load_flags = "DEFAULT",
+			stretch = "Normal",
+			style = "Normal",
+			assume_emoji_presentation = false,
+		},
+	})
+end
 
 Config.use_cap_height_to_scale_fallback_fonts = true
 Config.font_size = constants.get_font_size()
