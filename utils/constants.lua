@@ -19,7 +19,7 @@ function M.get_font_size()
 	end
 end
 
-function M.get_tab_size()
+function M.get_tab_font_size()
 	if M.is_mac then
 		return 14
 	elseif M.is_windows then

@@ -82,19 +82,38 @@ Config.font = wezterm.font_with_fallback({
 		weight = "Light",
 		harfbuzz_features = { "liga=1", "calt=1", "clig=1" },
 		assume_emoji_presentation = false,
+		style = "Normal",
+		stretch = "Normal",
+		freetype_load_target = "Light",
+		freetype_render_target = "Light",
+		freetype_load_flags = "DEFAULT",
 	},
-	{ family = "Symbols Nerd Font Mono" },
-	{ family = "Hack Nerd Font Mono" },
+	{
+		family = "Symbols Nerd Font Mono",
+		weight = "Regular",
+		harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
+		freetype_load_target = "Light",
+		freetype_render_target = "Light",
+		freetype_load_flags = "DEFAULT",
+		stretch = "Normal",
+		style = "Normal",
+		assume_emoji_presentation = false,
+	},
+	{
+		family = "Hack Nerd Font Mono",
+		weight = "Regular",
+		harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
+		freetype_load_target = "Light",
+		freetype_render_target = "Light",
+		freetype_load_flags = "DEFAULT",
+		stretch = "Normal",
+		style = "Normal",
+		assume_emoji_presentation = false,
+	},
 })
 
 Config.use_cap_height_to_scale_fallback_fonts = true
-if constants.is_mac then
-	Config.font_size = 16
-elseif constants.is_windows then
-	Config.font_size = 16
-elseif constants.is_linux then
-	Config.font_size = 12
-end
+Config.font_size = constants.get_font_size()
 
 ----------------
 -- LAUNCH MENU

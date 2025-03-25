@@ -214,7 +214,7 @@ function M.setup(Config, tabline, scheme)
 
 	Config.window_frame = {
 		font = wezterm.font({ family = "Operator Mono", weight = "Book" }),
-		font_size = 14,
+		font_size = constants.get_tab_font_size(),
 		active_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
 		inactive_titlebar_bg = scheme.tab_bar.inactive_tab.bg_color,
 	}
