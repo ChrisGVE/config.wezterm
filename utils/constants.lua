@@ -2,12 +2,21 @@ local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes 
 
 local M = {}
 
-M.HOME = os.getenv("HOME")
-M.STATE = os.getenv("XDG_STATE_HOME") or M.HOME .. "/.local/state"
-
 M.is_mac = wezterm.target_triple:find("apple") ~= nil
 M.is_windows = wezterm.target_triple:find("windows") ~= nil
 M.is_linux = wezterm.target_triple:find("linux") ~= nil
+
+local home_env
+local state_env
+if M.is_windows then
+	home_env = "HOMEPATH"
+	state_env = "LOCALAPPDATA"
+else
+	home_env = "HOME"
+	state_env = "XDG_STATE_HOME"
+end
+M.HOME = os.getenv(home_env)
+M.STATE = os.getenv(state_env) or M.HOME .. "/.local/state"
 
 function M.get_font_size()
 	if M.is_mac then
