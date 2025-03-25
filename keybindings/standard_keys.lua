@@ -3,7 +3,9 @@ local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes 
 local constants = require("utils.constants")
 local helpers = require("utils.helpers")
 
-local M = {
+local M = {}
+
+local base = {
 	{ mods = "LEADER", key = "-", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
 	{ mods = "LEADER|SHIFT", key = "_", action = wezterm.action.SplitPane({ direction = "Down", top_level = true }) },
 	{ mods = "LEADER", key = "\\", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
@@ -58,7 +60,7 @@ elseif constants.is_windows then
 	mods = "SHIFT|CTRL"
 end
 
-helpers.deepMerge(M, {
+M = helpers.deepMerge(base, {
 	{ mods = mods, key = "c", action = wezterm.action.CopyTo("Clipboard") },
 	{ mods = mods, key = "v", action = wezterm.action.PasteFrom("Clipboard") },
 	{ mods = mods, key = "q", action = wezterm.action.QuitApplication },
@@ -76,7 +78,9 @@ elseif constants.is_windows then
 	mods = "CTRL"
 end
 
-helpers.deepMerge(M, {
+wezterm.log_info(mods)
+
+M = helpers.deepMerge(M, {
 	{ mods = mods, key = "=", action = wezterm.action.IncreaseFontSize },
 	{ mods = mods, key = "-", action = wezterm.action.DecreaseFontSize },
 	{ mods = mods, key = "0", action = wezterm.action.ResetFontSize },
@@ -91,7 +95,7 @@ elseif constants.is_windows then
 	mods = "ALT"
 end
 
-helpers.deepMerge(M, {
+M = helpers.deepMerge(M, {
 	{ mods = mods, key = "z", action = wezterm.action.TogglePaneZoomState },
 	{ mods = mods, key = "1", action = wezterm.action.ActivateTab(0) },
 	{ mods = mods, key = "2", action = wezterm.action.ActivateTab(1) },
