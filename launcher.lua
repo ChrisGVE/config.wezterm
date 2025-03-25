@@ -3,6 +3,8 @@ local constants = require("utils.constants")
 
 local nerdfonts = wezterm.nerdfonts
 
+local M = {}
+
 local launch_menu = {
 	{
 		label = nerdfonts.custom_neovim .. "  config zsh",
@@ -39,4 +41,8 @@ local launch_menu = {
 	},
 }
 
-return launch_menu
+function M.get_launch_menu()
+	return launch_menu
+end
+
+return M

@@ -119,8 +119,7 @@ Config.font_size = constants.get_font_size()
 -- LAUNCH MENU
 ----------------
 
-local launch_menu = require("launcher")
-
+local launch_menu = require("launcher").get_launch_menu()
 Config.launch_menu = launch_menu
 
 ---------------
