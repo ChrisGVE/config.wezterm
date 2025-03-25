@@ -119,7 +119,9 @@ Config.font_size = constants.get_font_size()
 -- LAUNCH MENU
 ----------------
 
-Config.launch_menu = require("launcher")
+local launch_menu = require("launcher")
+
+Config.launch_menu = launch_menu
 
 ---------------
 -- KEY BINDINGS
