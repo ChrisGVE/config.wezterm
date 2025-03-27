@@ -41,6 +41,12 @@ Config.scrollback_lines = 5000
 
 --- workspace_switcher config
 workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
+workspace_switcher.workspace_formatter = function(label)
+	return wezterm.format({
+		{ Foreground = { AnsiColor = "Green" } },
+		{ Text = "󱂬 : " .. label },
+	})
+end
 
 --- resurrect config
 resurrect.state_manager.set_max_nlines(Config.scrollback_lines)
@@ -49,8 +55,8 @@ resurrect.state_manager.set_max_nlines(Config.scrollback_lines)
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
 	save_workspaces = true,
-	save_windows = false,
-	save_tabs = false,
+	save_windows = true,
+	save_tabs = true,
 })
 
 -- if is_mac then
