@@ -81,11 +81,11 @@ function M.setup(scheme, resurrect, workspace_switcher, tabline)
 			key = "r",
 			action = wezterm.action_callback(function(win, pane)
 				resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
-					print(label)
 					local type = string.match(id, "^([^/]+)") -- match before '/'
 					id = string.match(id, "([^/]+)$") -- match after '/'
 					id = string.match(id, "(.+)%..+$") -- remove file extension
 					local opts = {
+						window = pane:window(),
 						relative = true,
 						restore_text = true,
 						on_pane_restore = resurrect.tab_state.default_on_pane_restore,
@@ -95,7 +95,6 @@ function M.setup(scheme, resurrect, workspace_switcher, tabline)
 						resurrect.workspace_state.restore_workspace(state, opts)
 					elseif type == "window" then
 						opts.close_open_tabs = true
-						opts.window = pane:window()
 						local state = resurrect.state_manager.load_state(id, "window")
 						resurrect.window_state.restore_window(pane:window(), state, opts)
 					elseif type == "tab" then
