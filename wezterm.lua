@@ -9,11 +9,8 @@ wezterm.plugin.update_all()
 
 -- Install plugins
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
-
 local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
-
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
-
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
 -- This will hold the configuration.
