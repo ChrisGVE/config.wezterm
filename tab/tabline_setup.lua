@@ -103,7 +103,7 @@ function M.setup(Config, tabline, scheme)
 					if workspace == constants.DEFAULT_WORKSPACE then
 						return ""
 					else
-						return nerdfonts.cod_terminal_tmux .. " " .. string.match(workspace, "[^/\\]+$")
+						return " " .. nerdfonts.cod_terminal_tmux .. " " .. string.match(workspace, "[^/\\]+$")
 					end
 				end,
 				padding = 0,
@@ -209,7 +209,7 @@ function M.setup(Config, tabline, scheme)
 
 	Config.tab_max_width = constants.TAB_MAX_SIZE
 	Config.show_new_tab_button_in_tab_bar = true
-	Config.hide_tab_bar_if_only_one_tab = true
+	-- Config.hide_tab_bar_if_only_one_tab = true
 	Config.use_fancy_tab_bar = true
 
 	Config.window_frame = {
