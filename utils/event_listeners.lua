@@ -1,4 +1,7 @@
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
+local listener = wezterm.plugin.require("https://github.com/chrisgve/listener.wezterm")
+local state = listener.state
+
 local constants = require("utils.constants")
 local helpers = require("utils.helpers")
 
