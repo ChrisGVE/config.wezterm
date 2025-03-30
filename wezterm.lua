@@ -12,7 +12,8 @@ local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smar
 local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
--- local listener = wezterm.plugin.require("https://github.com/chrisgve/listener.wezterm")
+local listener = wezterm.plugin.require("https://github.com/chrisgve/listener.wezterm")
+local modal = wezterm.plugin.require("https://github.com/MLFlexer/modal.wezterm")
 
 -- This will hold the configuration.
 Config = wezterm.config_builder()
@@ -141,18 +142,12 @@ Config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1500 }
 -- to be seen if the leader key can be changed contextually
 
 -- Key configuration
-wezterm.log_info("Loading standard keybindings")
 local standard_keys = require("keybindings.standard_keys")
-wezterm.log_info("Standard keybindings loaded")
 
-wezterm.log_info("Loading extended keys")
 local extended_keys = require("keybindings.extended_keys").setup(scheme, resurrect, workspace_switcher, tabline)
-wezterm.log_info("Extended keys loaded")
 
 -- finalized all the keybindings
-wezterm.log_info("Merging the keybindings")
 Config.keys = helpers.deepMerge(standard_keys, extended_keys)
-wezterm.log_info("Keybindings merged")
 
 -- AUGMENT COMMAND PALETTE
 -- TODO: Work on the augment command palette as the palette is currently unusable
@@ -184,18 +179,14 @@ wezterm.log_info("Keybindings merged")
 -- TAB BAR
 ----------------
 
-wezterm.log_info("Setting up the tabline")
 local tabline_setup = require("tab.tabline_setup")
 tabline_setup.setup(Config, tabline, scheme)
-wezterm.log_info("Tabline setup")
 
 ----------------
 -- PANE SETTINGS
 ----------------
 
-wezterm.log_info("Configure inactive tab hsb")
 Config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.7 }
-wezterm.log_info("done")
 
 ---------------
 -- TITLE BAR
@@ -204,15 +195,12 @@ wezterm.log_info("done")
 -- TODO: work on the title bar which is very bare
 
 -- Title bar
-wezterm.log_info("Configuring window decorations")
 Config.window_decorations = "RESIZE|TITLE"
-wezterm.log_info("done")
 
 ---------------
 -- SMART_SPLIT
 ---------------
 
-wezterm.log_info("Applyuing smart_splits")
 smart_splits.apply_to_config(Config, {
 	direction_keys = {
 		move = { "h", "j", "k", "l" },
@@ -224,7 +212,6 @@ smart_splits.apply_to_config(Config, {
 		resize = "CTRL", -- modifier to use for pane resize, e.g. META+h to resize to the left
 	},
 })
-wezterm.log_info(done)
 
 -- and finally, return the configuration to weztermp
 return Config
