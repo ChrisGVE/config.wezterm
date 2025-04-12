@@ -1,22 +1,33 @@
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
-local listener = wezterm.plugin.require("https://github.com/chrisgve/listener.wezterm")
-local state = listener.state
 
+-- Import our new plugin
+local listeners = wezterm.plugin.require("https://github.com/chrisgve/listeners.wezterm")
+local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
+local state = listeners.state
+
+-- Import local modules
 local constants = require("utils.constants")
 local helpers = require("utils.helpers")
 
 local M = {}
 
-local function basename(s)
-	return string.gsub(s, "(.*[/\\])(.*)", "%2")
-end
+-- Store the basename function in our state for reuse
+listeners.state.functions.set("basename", function(path)
+	return string.gsub(path, "(.*[/\\])(.*)", "%2")
+end)
 
-function M.setup(resurrect, workspace_switcher, tabline)
+-- Initialize flags
+state.flags.set("is_periodic_save", false)
+
+function M.setup()
+	-- Auto-require the plugins instead of passing them as parameters
+
 	------------------------------------
 	-- EVENT LISTENERS CONFIGURATION
 	------------------------------------
-
-	local is_periodic_save = false
 
 	local event_listeners = {
 		-- Restore last workspace
@@ -25,6 +36,7 @@ function M.setup(resurrect, workspace_switcher, tabline)
 				resurrect.state_manager.resurrect_on_gui_startup()
 			end,
 		},
+
 		-- Saves the state when a workspace is selected
 		["smart_workspace_switcher.workspace_switcher.selected"] = {
 			fn = function(args)
@@ -37,6 +49,7 @@ function M.setup(resurrect, workspace_switcher, tabline)
 				resurrect.state_manager.save_state(workspace_state.get_workspace_state())
 			end,
 		},
+
 		-- Restores the state after a workspace has been selected
 		["smart_workspace_switcher.workspace_switcher.chosen"] = {
 			fn = function(args)
@@ -44,21 +57,17 @@ function M.setup(resurrect, workspace_switcher, tabline)
 				local path = args[2]
 				local label = args[3]
 
-				wezterm.log_info(window)
+				-- Use our state function to get basename
+				local base_path = state.functions.call("basename", path)
 
 				window:gui_window():set_right_status(wezterm.format({
 					{ Foreground = { Color = "green" } },
-					{ Text = basename(path) .. "  " },
+					{ Text = base_path .. "  " },
 				}))
-				-- local gui_win = window:gui_window()
-				-- local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-				-- gui_win:set_right_status(wezterm.format({
-				-- 	{ Foreground = { Color = "green" } },
-				-- 	{ Text = base_path .. "  " },
-				-- }))
 				resurrect.state_manager.write_current_state(label, "workspace")
 			end,
 		},
+
 		-- Loads the state whenever a new workspace is created
 		["smart_workspace_switcher.workspace_switcher.created"] = {
 			fn = function(args)
@@ -82,81 +91,75 @@ function M.setup(resurrect, workspace_switcher, tabline)
 				})
 			end,
 		},
+
 		["smart_workspace_switcher.workspace_switcher.start"] = {
 			log_message = "Cancel!",
 			info = true,
 		},
+
 		["smart_workspace_switcher.workspace_switcher.canceled"] = {
 			log_message = "Cancel!",
 			info = true,
 		},
+
 		["window-config-reloaded"] = {
-			message = "Configuration reloaded",
+			toast_message = "Configuration reloaded",
 		},
+
 		["resurrect.error"] = {
-			message = "Resurrect error!",
+			toast_message = "Resurrect error!",
 			log_message = "ERROR!",
 			error = true,
 		},
+
 		["resurrect.state_manager.delete_state.finished"] = {
-			message = "State %s deleted",
-			format = 1,
+			toast_message = "State %s deleted",
+			toast_arg = 1,
 		},
+
 		["resurrect.tab_state.restore_tab.finished"] = {
-			message = "Tab restored",
+			toast_message = "Tab restored",
 		},
+
+		["resurrect.fuzzy_loader.fuzzy_load.start"] = {
+			log_message = "resurrect.fuzzy_lader.fuzzy_load.start",
+		},
+
 		["resurrect.window_state.restore_window.finished"] = {
-			message = "Window restored",
+			toast_message = "Window restored",
 		},
+
 		["resurrect.workspace_state.restore_workspace.finished"] = {
-			message = "Workspace restored",
+			toast_message = "Workspace restored",
 		},
+
 		["resurrect.state_manager.save_state.finished"] = {
-			fn = function(args)
-				is_periodic_save = false
-			end,
+			state_fn = "reset_periodic_save",
 		},
+
 		["resurrect.periodic_save"] = {
-			fn = function(args)
-				is_periodic_save = true
-				resurrect.state_manager.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
-			end,
+			state_fn = "handle_periodic_save",
 		},
 	}
 
-	for event, opts in pairs(event_listeners) do
-		wezterm.on(event, function(...)
-			local sections = helpers.get_sections(event)
-			local args = { ... }
+	-- Store function for handling periodic save
+	state.functions.set("reset_periodic_save", function(args)
+		state.flags.set("is_periodic_save", false)
+	end)
 
-			if opts.fn then
-				opts.fn(args)
-			end
-			if opts.check_periodic_save then
-				is_periodic_save = false
-			end
-			if opts.message then
-				local msg = opts.message
-				if opts.format then
-					msg = string.format(msg, args[opts.format])
-				end
-				helpers.notify(msg)
-			end
-			if opts.log_message then
-				local log = event .. ":"
-				for _, v in ipairs(args) do
-					log = log .. " " .. tostring(v)
-				end
-				if opts.error then
-					wezterm.log_error(opts.log_message, log)
-				elseif opts.warn then
-					wezterm.log_warn(opts.log_message, log)
-				else
-					wezterm.log_info(opts.log_message, log)
-				end
-			end
-		end)
-	end
+	-- Store function for handling periodic save
+	state.functions.set("handle_periodic_save", function(args)
+		state.flags.set("is_periodic_save", true)
+		resurrect.state_manager.write_current_state(wezterm.mux.get_active_workspace(), "workspace")
+	end)
+
+	-- Configure the listeners with our event definitions
+	listeners.config(event_listeners, {
+		toast_timeout = constants.NOTIFICATION_TIME,
+		function_options = {
+			safe = true,
+		},
+	})
 end
 
 return M
