@@ -9,10 +9,11 @@ wezterm.plugin.update_all()
 
 -- Install plugins
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
-local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
-local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 local modal = wezterm.plugin.require("https://github.com/MLFlexer/modal.wezterm")
+local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+
+local dev = wezterm.plugin.require("https://github.com/chrisgve/dev.wezterm")
 
 -- This will hold the configuration.
 Config = wezterm.config_builder()
@@ -37,18 +38,14 @@ Config.enable_kitty_graphics = true
 
 Config.scrollback_lines = 5000
 
---- workspace_switcher config
-workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
-workspace_switcher.workspace_formatter = function(label)
-	return wezterm.format({
-		{ Foreground = { AnsiColor = "Green" } },
-		{ Text = "󱂬 : " .. label },
-	})
-end
-
---- resurrect config
+-- Configure resurrect (plugin will be required automatically in the event_listeners)
+-- local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
+-- opts = {
+-- 	fetch_branch = true,
+-- 	keywords = { "https", "github", "chrisgve", "resurrect", "wezterm", "dev" },
+-- }
+-- local resurrect = dev.require("https://github.com/MLFlexer/resurrect.wezterm", opts)
 resurrect.state_manager.set_max_nlines(Config.scrollback_lines)
-
 resurrect.state_manager.change_state_save_dir(constants.STATE .. "/wezterm/resurrect/")
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
@@ -57,22 +54,23 @@ resurrect.state_manager.periodic_save({
 	save_tabs = true,
 })
 
--- if is_mac then
--- 	-- Resurrect set encryption
--- 	resurrect.state_manager.set_encryption({
--- 		enable = true,
--- 		method = "/usr/local/bin/rage",
--- 		private_key = constants.HOME .. "/.secret/rage-wezterm.txt",
--- 		public_key = "age1k429zd7js54x484ya5apata96sa5z7uaf4h6s8l4t4xnc2znm4us9kum3e",
--- 	})
--- end
+-- Configure workspace_switcher (plugin will be required automatically in the event_listeners)
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+workspace_switcher.zoxide_path = "/usr/local/bin/zoxide"
+workspace_switcher.workspace_formatter = function(label)
+	return wezterm.format({
+		{ Foreground = { AnsiColor = "Green" } },
+		{ Text = "󱂬 : " .. label },
+	})
+end
 
 -------------------
 -- EVENTS
 -------------------
 
+-- Use our event listeners implementation
 local listeners = require("utils.event_listeners")
-listeners.setup(resurrect, workspace_switcher, tabline)
+listeners.setup()
 
 local helpers = require("utils.helpers")
 
@@ -148,32 +146,6 @@ local extended_keys = require("keybindings.extended_keys").setup(scheme, resurre
 -- finalized all the keybindings
 Config.keys = helpers.deepMerge(standard_keys, extended_keys)
 
--- AUGMENT COMMAND PALETTE
--- TODO: Work on the augment command palette as the palette is currently unusable
--- wezterm.on("augment-command-palette", function(window, pane)
--- 	local workspace_state = resurrect.workspace_state
--- 	return {
--- 		{
--- 			brief = "Window | Workspace: Switch Workspace",
--- 			icon = "md_briefcase_arrow_up_down",
--- 			action = workspace_switcher.switch_workspace(),
--- 		},
--- 		{
--- 			brief = "Window | Workspace: Rename Workspace",
--- 			icon = "md_briefcase_edit",
---			action = wezterm.action.PromptInputLine({
--- 				description = "Enter new name for workspace",
--- 				action = wezterm.action_callback(function(window, pane, line)
--- 					if line then
--- 						wezterm.mux.rename_workspace(wezterm.mux.get_active_workspace(), line)
--- 						resurrect.save_state(workspace_state.get_workspace_state())
--- 					end
--- 				end),
--- 			}),
--- 		},
--- 	}
--- end)
-
 ----------------
 -- TAB BAR
 ----------------
@@ -190,8 +162,6 @@ Config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.7 }
 ---------------
 -- TITLE BAR
 ---------------
-
--- TODO: work on the title bar which is very bare
 
 -- Title bar
 Config.window_decorations = "RESIZE|TITLE"
@@ -212,5 +182,5 @@ smart_splits.apply_to_config(Config, {
 	},
 })
 
--- and finally, return the configuration to weztermp
+-- and finally, return the configuration to wezterm
 return Config
