@@ -36,7 +36,7 @@ Config.set_environment_variables = {
 
 Config.enable_kitty_graphics = true
 
-Config.scrollback_lines = 5000
+Config.scrollback_lines = constants.SCROLLBACK_LINES
 
 -- Configure resurrect (plugin will be required automatically in the event_listeners)
 -- local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
@@ -45,7 +45,7 @@ Config.scrollback_lines = 5000
 -- 	keywords = { "https", "github", "chrisgve", "resurrect", "wezterm", "dev" },
 -- }
 -- local resurrect = dev.require("https://github.com/MLFlexer/resurrect.wezterm", opts)
-resurrect.state_manager.set_max_nlines(Config.scrollback_lines)
+resurrect.state_manager.set_max_nlines(M.SCROLLBACK_LINES)
 resurrect.state_manager.change_state_save_dir(constants.STATE .. "/wezterm/resurrect/")
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
