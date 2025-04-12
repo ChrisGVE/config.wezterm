@@ -78,8 +78,6 @@ elseif constants.is_windows then
 	mods = "CTRL"
 end
 
-wezterm.log_info(mods)
-
 M = helpers.deepMerge(M, {
 	{ mods = mods, key = "=", action = wezterm.action.IncreaseFontSize },
 	{ mods = mods, key = "-", action = wezterm.action.DecreaseFontSize },
