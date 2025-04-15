@@ -38,6 +38,8 @@ local base = {
 	{ mods = "LEADER", key = "?", action = wezterm.action.ActivateCommandPalette },
 	{ mods = "LEADER", key = "v", action = wezterm.action.ActivateCopyMode },
 	{ mods = "LEADER", key = "l", action = wezterm.action.ShowLauncher },
+	{ mods = "LEADER", key = "b", action = wezterm.action.RotatePanes("CounterClockwise") },
+	{ mods = "LEADER", key = "n", action = wezterm.action.RotatePanes("Clockwise") },
 	{
 		mods = "LEADER|SHIFT",
 		key = "l",

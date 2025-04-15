@@ -2,7 +2,7 @@ local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes 
 
 -- Import our new plugin
 local listeners = wezterm.plugin.require("https://github.com/chrisgve/listeners.wezterm")
-local resurrect = wezterm.plugin.require("https://github.com/chrisgve/resurrect.wezterm")
+local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 

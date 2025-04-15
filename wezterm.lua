@@ -13,6 +13,7 @@ local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabl
 local modal = wezterm.plugin.require("https://github.com/MLFlexer/modal.wezterm")
 local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
 
+---@type { setup: fun(opts: table)}
 local dev = wezterm.plugin.require("https://github.com/chrisgve/dev.wezterm")
 
 -- This will hold the configuration.
@@ -45,13 +46,13 @@ Config.scrollback_lines = constants.SCROLLBACK_LINES
 -- 	keywords = { "https", "github", "chrisgve", "resurrect", "wezterm", "dev" },
 -- }
 -- local resurrect = dev.require("https://github.com/MLFlexer/resurrect.wezterm", opts)
-resurrect.state_manager.set_max_nlines(M.SCROLLBACK_LINES)
+resurrect.state_manager.set_max_nlines(constants.SCROLLBACK_LINES)
 resurrect.state_manager.change_state_save_dir(constants.STATE .. "/wezterm/resurrect/")
 resurrect.state_manager.periodic_save({
 	interval_seconds = 120, -- s
 	save_workspaces = true,
-	save_windows = true,
-	save_tabs = true,
+	save_windows = false,
+	save_tabs = false,
 })
 
 -- Configure workspace_switcher (plugin will be required automatically in the event_listeners)

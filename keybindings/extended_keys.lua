@@ -1,10 +1,12 @@
 local wezterm = require("wezterm") --[[@as Wezterm]] --- this type cast invokes the LSP module for Wezterm
 local constants = require("utils.constants")
 local helpers = require("utils.helpers")
+local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 
 local M = {}
 
-function M.setup(scheme, resurrect, workspace_switcher, tabline)
+function M.setup(scheme)
 	return {
 
 		-- SMART_WORKSPACE_SWITCHER
