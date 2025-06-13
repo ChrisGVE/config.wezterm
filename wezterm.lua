@@ -117,7 +117,7 @@ if not constants.is_windows then
 	})
 end
 
-Config.use_cap_height_to_scale_fallback_fonts = true
+Config.use_cap_height_to_scale_fallback_fonts = false
 Config.font_size = constants.get_font_size()
 
 ----------------
